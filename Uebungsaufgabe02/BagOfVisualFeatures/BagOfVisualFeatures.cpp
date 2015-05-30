@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include <stdio.h>
-#include <string.h> 
 #include <list>
 #include <vector>
 #include <cmath>
@@ -16,6 +15,8 @@
 #include "VideoHelpers.h"
 #include "FeatureHelpers.h"
 #include "VideoContainer.h"
+#include "FileHelpers.h"
+#include "StringHelpers.h"
 
 using namespace cv;
 using namespace std;
@@ -31,19 +32,40 @@ Mat * BuildVocabulary(vector<Mat> *trainingFrames)
 	return featureClusters;
 }
 
+void BuildKNN(vector<VideoContainer *> *videoContainers, Mat *vocabulary)
+{
+	// output featurepoints and labels for videos
+
+}
+
 int main(int argc, char *argv[])
 {
 	//string videoFileName = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/1_Kiss/Kiss_001.avi";
-	string videoFileName = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/1_Kiss/Kiss_002.avi";
+	//string videoFileName = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/1_Kiss/Kiss_002.avi";
+
+	//string videoFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/1_Kiss/";
+	string videoFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/";
+	ArgumentPath(argc, argv, 1, videoFileDir);
 	
-	vector<string> *videoFileNames = new vector<string>();
-	videoFileNames->push_back(videoFileName);
+
+	vector<string> videoFileNames = getFilesPathWithinFolder(videoFileDir);
+	
+	//vector<string> *videoFileNames = new vector<string>();
+	//videoFileNames->push_back(videoFileName);
 
 	vector<Mat> *trainingFrames = new vector<Mat>();
-	for(int i=0; i<videoFileNames->size(); i++)
+	vector<VideoContainer *> *videoContainers = new vector<VideoContainer *>();
+	for(int i=0; i<videoFileNames.size(); i++)
 	{
-		vector<Mat> *videoFrames = GetFrames(videoFileName);	
-		GetSpatialTemporalFrames(videoFrames, trainingFrames);
+		//vector<Mat> *videoFrames = GetFrames(videoFileName);	
+		//GetSpatialTemporalFrames(videoFrames, trainingFrames);
+
+		vector<string> tokens = splitString(videoFileNames[i], "/");
+		string classification = tokens[tokens.size()-1];
+
+		VideoContainer *videoContainer = new VideoContainer(videoFileNames[i], classification);
+		videoContainers->push_back(videoContainer);
+		trainingFrames->insert(trainingFrames->end(), videoContainer->getSpatialTemporalFrames()->begin(), videoContainer->getSpatialTemporalFrames()->end());
 	}
 	// Learning phase
 	// ==============
@@ -52,7 +74,7 @@ int main(int argc, char *argv[])
 	Mat *vocabulary = BuildVocabulary(trainingFrames);
 
 	// build feature representation of every video in the trainingset
-	//BuildKNN(trainingFrames, vocabulary);
+	BuildKNN(videoContainers, vocabulary);
 
 	int j=0;
 

@@ -83,8 +83,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FeatureHelpers.h" />
+    <ClInclude Include="FileHelpers.h" />
     <ClInclude Include="FrameHelpers.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="StringHelpers.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="VideoContainer.h" />
     <ClInclude Include="VideoHelpers.h" />
@@ -92,11 +94,13 @@
   <ItemGroup>
     <ClCompile Include="BagOfVisualFeatures.cpp" />
     <ClCompile Include="FeatureHelpers.cpp" />
+    <ClCompile Include="FileHelpers.cpp" />
     <ClCompile Include="FrameHelpers.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="StringHelpers.cpp" />
     <ClCompile Include="VideoContainer.cpp" />
     <ClCompile Include="VideoHelpers.cpp" />
   </ItemGroup>
