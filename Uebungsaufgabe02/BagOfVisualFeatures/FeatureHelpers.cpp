@@ -38,6 +38,52 @@ vector<Mat> *ExtractFeatures(vector<Mat> *frames, int nfeatures = 100)
 	return descriptorsList;
 }
 
+Mat *AppendFeatures(vector<Mat> *features)
+{
+	// create new Mat
+	int rows = (*features)[0].rows;
+	int cols = (*features)[0].cols;
+	int Rows = rows * features->size();
+	int Cols = cols;
+	int type = (*features)[0].type();
+	Mat *featureMat = new Mat(Rows, Cols, type);
+
+	// move every row of Mats in combined Mat
+	for(int i=0; i<features->size(); i++)
+	{
+		//// TEST
+		//float test1 = (*features)[i].at<float>(0,0);
+		//float test10 = (*features)[i].at<float>(10,10);
+
+		// Rect(int x, int y, int width, int height) 
+		(*features)[i].copyTo( (*featureMat)( Rect(0, i*rows, cols, rows) ) );
+		
+		//// TEST
+		//float test2 = featureMat.at<float>(i*rows,0);
+		//float test20 = featureMat.at<float>(i*rows+10,10);
+		//std::vector<float> myArray;
+		//myArray.assign((float*)featureMat.datastart, (float*)featureMat.dataend);
+		//int s=0;
+	}
+	// ============================================================
+	//// move every row of Mats in combined Mat
+	//for(int i=0; i<features->size(); i++)
+	//{		
+	//	for(int rowNr=0; rowNr<Rows; rowNr++)
+	//	{
+	//		for(int columnNr=0; columnNr<Rows; columnNr++)
+	//		{
+	//			//// TEST - Zugriff verursacht Absturz !!!
+	//			//float f = (*features)[i].at<float>(rowNr,columnNr);
+	//			featureMat->at<float>(i*rowNr,columnNr) = (*features)[i].at<float>(rowNr,columnNr);
+	//		}
+	//	}
+	//}
+	// ============================================================
+	return featureMat;
+}
+
+
 Mat *ClusterFeatures(vector<Mat> *features, int numClusters = 500) // 50*50 from CompVis or 480 from paper
 {
 	// create new Mat
@@ -64,6 +110,10 @@ Mat *ClusterFeatures(vector<Mat> *features, int numClusters = 500) // 50*50 from
 		//std::vector<float> myArray;
 		//myArray.assign((float*)featureMat.datastart, (float*)featureMat.dataend);
 		//int s=0;
+
+		// TEST
+		if(i==6)
+			break;
 	}
 	// ============================================================
 	//// move every row of Mats in combined Mat
@@ -86,8 +136,8 @@ Mat *ClusterFeatures(vector<Mat> *features, int numClusters = 500) // 50*50 from
 	Mat centers;
 	kmeans(featureMat, numClusters, bestLabels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), attempts, KMEANS_PP_CENTERS, centers );
 	
-	Mat *clusters = new Mat(bestLabels.rows, bestLabels.cols, bestLabels.type());
-	bestLabels.copyTo(*clusters);//,Rect(0,0,bestLabels.cols, bestLabels.rows));
+	Mat *clusters = new Mat(centers.rows, centers.cols, centers.type());
+	centers.copyTo(*clusters);//,Rect(0,0,centers.cols, centers.rows));
 
 	return clusters;
 }

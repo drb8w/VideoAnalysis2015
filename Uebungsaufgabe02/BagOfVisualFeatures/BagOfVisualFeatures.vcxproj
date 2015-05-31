@@ -82,6 +82,8 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ConfusionMatrix.h" />
+    <ClInclude Include="FeatureDictionary.h" />
     <ClInclude Include="FeatureHelpers.h" />
     <ClInclude Include="FileHelpers.h" />
     <ClInclude Include="FrameHelpers.h" />
@@ -89,10 +91,13 @@
     <ClInclude Include="StringHelpers.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="VideoContainer.h" />
+    <ClInclude Include="VideoMetaData.h" />
     <ClInclude Include="VideoHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BagOfVisualFeatures.cpp" />
+    <ClCompile Include="ConfusionMatrix.cpp" />
+    <ClCompile Include="FeatureDictionary.cpp" />
     <ClCompile Include="FeatureHelpers.cpp" />
     <ClCompile Include="FileHelpers.cpp" />
     <ClCompile Include="FrameHelpers.cpp" />
@@ -102,6 +107,7 @@
     </ClCompile>
     <ClCompile Include="StringHelpers.cpp" />
     <ClCompile Include="VideoContainer.cpp" />
+    <ClCompile Include="VideoMetaData.cpp" />
     <ClCompile Include="VideoHelpers.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

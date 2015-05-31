@@ -43,3 +43,17 @@ std::string ArgumentPath(int argc, char *argv[], int argNo, std::string &path)
 
 	return path;
 }
+
+int str_hash( const string &key, int tableSize) {
+   int hashVal = 0;
+
+   for(int i = 0; i<key.length();  i++)
+     hashVal = 37*hashVal+key[i];
+
+   hashVal %= tableSize;
+
+   if(hashVal<0)
+     hashVal += tableSize;
+
+   return hashVal;
+ }
