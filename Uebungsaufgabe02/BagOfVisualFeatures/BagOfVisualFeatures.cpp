@@ -23,10 +23,10 @@
 using namespace cv;
 using namespace std;
 
-Mat *BuildVocabulary(vector<Mat> &trainingFrames)
+Mat *BuildVocabulary(vector<Mat *> &trainingFrames)
 {
-	vector<Mat> *features = ExtractFeatures(&trainingFrames);
-	Mat *featureClusters = ClusterFeatures(features);
+	vector<Mat *> *features = ExtractFeatures(trainingFrames);
+	Mat *featureClusters = ClusterFeatures(*features);
 
 	return featureClusters;
 }
@@ -43,11 +43,11 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 	{
 		VideoContainer *videoContainer = videoContainers[i];
 		int nfeatures = 300; 	// denser sampling of videos
-		vector<Mat> *features = ExtractFeatures(videoContainer->getSpatialTemporalFrames(),nfeatures);
+		vector<Mat *> *features = ExtractFeatures(*(videoContainer->getSpatialTemporalFrames()),nfeatures);
 
-		// TEST
-		//Mat *collectedFeatures = AppendFeatures(features);
-		Mat *collectedFeatures = &(*features)[0];
+		Mat *collectedFeatures = AppendFeatures(*features);
+		//// TEST
+		//Mat *collectedFeatures = &(*features)[0];
 
 		// search represantive words in vocabluary that are closest to features
 		for(int row=0; row<collectedFeatures->rows; row++)
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 	//vector<string> videoFileNames;
 	//videoFileNames.push_back(videoFileName);
 	
-	vector<Mat> *trainingFrames = new vector<Mat>();
+	vector<Mat *> *trainingFrames = new vector<Mat *>();
 	vector<VideoContainer *> *videoContainers = new vector<VideoContainer *>();
 	for(int i=0; i<videoFileNames.size(); i++)
 	{

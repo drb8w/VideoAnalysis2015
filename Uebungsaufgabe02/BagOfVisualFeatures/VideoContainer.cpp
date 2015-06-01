@@ -18,9 +18,9 @@ VideoContainer::VideoContainer(string videoFileName, string classification)
 	this->m_classification = classification;
 
 	// read frames once
-	this->m_videoFrames = GetFrames(videoFileName);
-	this->m_spatialTemporalFrames = new vector<Mat>();
-	GetSpatialTemporalFrames(this->m_videoFrames, this->m_spatialTemporalFrames);
+	this->m_videoFrames = GetFramePtrs(videoFileName);
+	this->m_spatialTemporalFrames = new vector<Mat *>();
+	GetSpatialTemporalFramePtrs(*(this->m_videoFrames), this->m_spatialTemporalFrames);
 }
 
 string VideoContainer::getVideoFileName()
@@ -33,12 +33,12 @@ string VideoContainer::getClassification()
 	return this->m_classification;
 }
 
-vector<Mat> *VideoContainer::getFrames()
+vector<Mat *> *VideoContainer::getFrames()
 {
 	return this->m_videoFrames;
 }
 
-vector<Mat> *VideoContainer::getSpatialTemporalFrames()
+vector<Mat *> *VideoContainer::getSpatialTemporalFrames()
 {
 	return this->m_spatialTemporalFrames;
 }

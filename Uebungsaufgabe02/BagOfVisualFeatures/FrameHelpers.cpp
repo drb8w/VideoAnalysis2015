@@ -46,3 +46,22 @@ vector<Mat> *convertToGrayscales(vector<Mat> *rgbFrames)
 	return convertToGrayscales(rgbFrames, grayFrames);
 }
 
+
+vector<Mat *> *convertToGrayscalePtrs(vector<Mat *> &rgbFrames, vector<Mat *> &grayFrames)
+{
+	for(int i=0; i < rgbFrames.size(); i++)
+	{
+		Mat *imgRGB_i = rgbFrames[i];
+		Mat *imgGray_i = new Mat(imgRGB_i->rows,imgRGB_i->cols, CV_8U);
+		convertToGrayscale(*imgRGB_i, *imgGray_i);
+		grayFrames.push_back(imgGray_i);
+	}
+
+	return &grayFrames;
+}
+
+vector<Mat *> *convertToGrayscalePtrs(vector<Mat *> &rgbFrames)
+{
+	vector<Mat *> *grayFrames = new vector<Mat *>();
+	return convertToGrayscalePtrs(rgbFrames, *grayFrames);
+}

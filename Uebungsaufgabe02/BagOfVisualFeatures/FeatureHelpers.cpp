@@ -14,21 +14,21 @@
 using namespace cv;
 using namespace std;
 
-vector<Mat> *ExtractFeatures(vector<Mat> *frames, int nfeatures = 100)
+vector<Mat *> *ExtractFeatures(vector<Mat *> &frames, int nfeatures = 100)
 {
 	// apply feature extraction on all collected frames
-	vector<Mat> *descriptorsList = new vector<Mat>();
+	vector<Mat *> *descriptorsList = new vector<Mat *>();
 
 	// SIFT::SIFT(int nfeatures=0, int nOctaveLayers=3, double contrastThreshold=0.04, double edgeThreshold=10, double sigma=1.6)
 	// void SIFT::operator()(InputArray img, InputArray mask, vector<KeyPoint>& keypoints, OutputArray descriptors, bool useProvidedKeypoints=false)
 	SiftFeatureDetector detector(nfeatures);    
 	
-	for(int i=0; i<frames->size(); i++)
+	for(int i=0; i<frames.size(); i++)
 	{
 		vector<KeyPoint> keypoints;
-		detector.detect((*frames)[i], keypoints);
-		Mat descriptors;
-		detector.compute((*frames)[i], keypoints, descriptors);
+		detector.detect(*(frames[i]), keypoints);
+		Mat *descriptors = new Mat(nfeatures,128,CV_32FC1);
+		detector.compute(*(frames[i]), keypoints, *descriptors);
 		//// TEST
 		//float test1 = descriptors.at<float>(0,0);
 		//float test10 = descriptors.at<float>(10,10);
@@ -38,25 +38,25 @@ vector<Mat> *ExtractFeatures(vector<Mat> *frames, int nfeatures = 100)
 	return descriptorsList;
 }
 
-Mat *AppendFeatures(vector<Mat> *features)
+Mat *AppendFeatures(vector<Mat *> &features)
 {
 	// create new Mat
-	int rows = (*features)[0].rows;
-	int cols = (*features)[0].cols;
-	int Rows = rows * features->size();
+	int rows = features[0]->rows;
+	int cols = features[0]->cols;
+	int Rows = rows * features.size();
 	int Cols = cols;
-	int type = (*features)[0].type();
+	int type = features[0]->type();
 	Mat *featureMat = new Mat(Rows, Cols, type);
 
 	// move every row of Mats in combined Mat
-	for(int i=0; i<features->size(); i++)
+	for(int i=0; i<features.size(); i++)
 	{
 		//// TEST
 		//float test1 = (*features)[i].at<float>(0,0);
 		//float test10 = (*features)[i].at<float>(10,10);
 
 		// Rect(int x, int y, int width, int height) 
-		(*features)[i].copyTo( (*featureMat)( Rect(0, i*rows, cols, rows) ) );
+		features[i]->copyTo( (*featureMat)( Rect(0, i*rows, cols, rows) ) );
 		
 		//// TEST
 		//float test2 = featureMat.at<float>(i*rows,0);
@@ -65,44 +65,29 @@ Mat *AppendFeatures(vector<Mat> *features)
 		//myArray.assign((float*)featureMat.datastart, (float*)featureMat.dataend);
 		//int s=0;
 	}
-	// ============================================================
-	//// move every row of Mats in combined Mat
-	//for(int i=0; i<features->size(); i++)
-	//{		
-	//	for(int rowNr=0; rowNr<Rows; rowNr++)
-	//	{
-	//		for(int columnNr=0; columnNr<Rows; columnNr++)
-	//		{
-	//			//// TEST - Zugriff verursacht Absturz !!!
-	//			//float f = (*features)[i].at<float>(rowNr,columnNr);
-	//			featureMat->at<float>(i*rowNr,columnNr) = (*features)[i].at<float>(rowNr,columnNr);
-	//		}
-	//	}
-	//}
-	// ============================================================
 	return featureMat;
 }
 
 
-Mat *ClusterFeatures(vector<Mat> *features, int numClusters = 500) // 50*50 from CompVis or 480 from paper
+Mat *ClusterFeatures(vector<Mat *> &features, int numClusters = 500) // 50*50 from CompVis or 480 from paper
 {
 	// create new Mat
-	int rows = (*features)[0].rows;
-	int cols = (*features)[0].cols;
-	int Rows = rows * features->size();
+	int rows = features[0]->rows;
+	int cols = features[0]->cols;
+	int Rows = rows * features.size();
 	int Cols = cols;
-	int type = (*features)[0].type();
+	int type = features[0]->type();
 	Mat featureMat(Rows, Cols, type);
 
 	// move every row of Mats in combined Mat
-	for(int i=0; i<features->size(); i++)
+	for(int i=0; i<features.size(); i++)
 	{
 		//// TEST
 		//float test1 = (*features)[i].at<float>(0,0);
 		//float test10 = (*features)[i].at<float>(10,10);
 
 		// Rect(int x, int y, int width, int height) 
-		(*features)[i].copyTo( featureMat( Rect(0, i*rows, cols, rows) ) );
+		features[i]->copyTo( featureMat( Rect(0, i*rows, cols, rows) ) );
 		
 		//// TEST
 		//float test2 = featureMat.at<float>(i*rows,0);
@@ -110,26 +95,8 @@ Mat *ClusterFeatures(vector<Mat> *features, int numClusters = 500) // 50*50 from
 		//std::vector<float> myArray;
 		//myArray.assign((float*)featureMat.datastart, (float*)featureMat.dataend);
 		//int s=0;
-
-		// TEST
-		if(i==6)
-			break;
 	}
-	// ============================================================
-	//// move every row of Mats in combined Mat
-	//for(int i=0; i<features->size(); i++)
-	//{		
-	//	for(int rowNr=0; rowNr<Rows; rowNr++)
-	//	{
-	//		for(int columnNr=0; columnNr<Rows; columnNr++)
-	//		{
-	//			//// TEST - Zugriff verursacht Absturz !!!
-	//			//float f = (*features)[i].at<float>(rowNr,columnNr);
-	//			featureMat.at<float>(i*rowNr,columnNr) = (*features)[i].at<float>(rowNr,columnNr);
-	//		}
-	//	}
-	//}
-	// ============================================================
+	
 
 	Mat bestLabels;
 	int attempts = 5;
