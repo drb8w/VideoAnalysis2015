@@ -82,6 +82,7 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Classification.h" />
     <ClInclude Include="ConfusionMatrix.h" />
     <ClInclude Include="FeatureDictionary.h" />
     <ClInclude Include="FeatureHelpers.h" />
@@ -96,6 +97,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BagOfVisualFeatures.cpp" />
+    <ClCompile Include="Classification.cpp" />
     <ClCompile Include="ConfusionMatrix.cpp" />
     <ClCompile Include="FeatureDictionary.cpp" />
     <ClCompile Include="FeatureHelpers.cpp" />

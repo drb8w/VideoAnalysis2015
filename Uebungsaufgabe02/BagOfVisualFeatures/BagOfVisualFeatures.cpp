@@ -6,19 +6,12 @@
 #include <vector>
 #include <cmath>
 #include <opencv2\opencv.hpp>
-
 #include <opencv2\imgproc\imgproc.hpp>
-
 #include <opencv2\highgui\highgui.hpp>
-
 #include <opencv2\features2d\features2d.hpp>
-
 #include <opencv2\nonfree\features2d.hpp>
-
 #include <opencv2\highgui\highgui.hpp>
-
 #include <opencv2\nonfree\nonfree.hpp>
-
 
 #include "FrameHelpers.h"
 #include "VideoHelpers.h"
@@ -28,6 +21,7 @@
 #include "StringHelpers.h"
 #include "FeatureDictionary.h"
 #include "VideoMetaData.h"
+#include "ConfusionMatrix.h"
 
 using namespace cv;
 using namespace std;
@@ -106,7 +100,7 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 	return videoMetaDataSet;
 }
 
-CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet)
+CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, string> &hashClassificationMap)
 {
 	CvRTParams params;
 	CvRTrees *rtree = new CvRTrees();
@@ -132,8 +126,11 @@ CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet)
 	// Copy Data
 	Mat trainingClassification(videoMetaDataSet.size(),1, CV_32FC1);
 	for(int j=0; j<videoMetaDataSet.size(); j++)
-		trainingClassification.at<float>(0,j)=str_hash(videoMetaDataSet[j]->getClassification());
-
+	{
+		int hash = videoMetaDataSet[j]->getClassification()->getHash();
+		hashClassificationMap[hash] = videoMetaDataSet[j]->getClassification()->getName();
+		trainingClassification.at<float>(0,j) = hash;
+	}
 	rtree->train(trainingData, CV_ROW_SAMPLE, trainingClassification,
 				cv::Mat(), cv::Mat(), cv::Mat(), cv::Mat(), params);
 
@@ -147,45 +144,46 @@ void ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary
 	vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(videoContainers, dictionary);
 
 	//Mat ConfusionMatrix(,,CV_32FC1);
+	ConfusionMatrix *confusionMatrix = new ConfusionMatrix(*GetUniqueVideoMetaDataClassifications(*videoMetaDataSet));
 
 	for(int i=0; i<videoMetaDataSet->size(); i++)
 	{
 		Mat *histogram = (*videoMetaDataSet)[i]->getHistogram();
 		float classification = rTreeClassifier.predict(*histogram);
 
-		//ConfusionMatrix.at<float>()=classification;
+		confusionMatrix->add((*videoMetaDataSet)[i]->getClassification()->getHash(), classification);
 	}
 
 }
 
-vector<int> *GetHashCodeList(vector<VideoMetaData *> &videoMetaDataSet)
-{
-	// TODO: moveTo ConfusionMatrix
-	list<string> classes;
-
-	for(int i=0; i<videoMetaDataSet.size(); i++)
-	{
-		VideoMetaData *videoMetaData = videoMetaDataSet[i];
-		classes.push_back(videoMetaData->getClassification());
-	}	
-	classes.unique();
-	
-	// generate maps to search
-	std::map <string, int> ClassIDMap;
-	std::map <int, string> IDClassMap;
-
-	list<string>::const_iterator iterator;
-	int index=0;
-	for (iterator = classes.begin(); iterator != classes.end(); ++iterator) 
-	{
-		string classification = *iterator;
-		ClassIDMap[classification] = index;
-		IDClassMap[index] = classification;
-		index++;
-	}
-
-	return NULL;
-}
+//vector<int> *GetHashCodeList(vector<VideoMetaData *> &videoMetaDataSet)
+//{
+//	// TODO: moveTo ConfusionMatrix
+//	list<string> classes;
+//
+//	for(int i=0; i<videoMetaDataSet.size(); i++)
+//	{
+//		VideoMetaData *videoMetaData = videoMetaDataSet[i];
+//		classes.push_back(videoMetaData->getClassification()->getName());
+//	}	
+//	classes.unique();
+//	
+//	// generate maps to search
+//	std::map <string, int> ClassIDMap;
+//	std::map <int, string> IDClassMap;
+//
+//	list<string>::const_iterator iterator;
+//	int index=0;
+//	for (iterator = classes.begin(); iterator != classes.end(); ++iterator) 
+//	{
+//		string classification = *iterator;
+//		ClassIDMap[classification] = index;
+//		IDClassMap[index] = classification;
+//		index++;
+//	}
+//
+//	return NULL;
+//}
 
 
 int main(int argc, char *argv[])
@@ -233,7 +231,8 @@ int main(int argc, char *argv[])
 	//vector<string> *classifications = new vector<string>();
 	vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(*videoContainers, *dictionary);//, *histograms, *classifications);
 
-	CvRTrees *classifier = TrainClassifier(*videoMetaDataSet);
+	map<int, string> *hashClassificationMap = new map<int, string>();
+	CvRTrees *classifier = TrainClassifier(*videoMetaDataSet, *hashClassificationMap);
 
 	string videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
 	vector<VideoContainer *> *videoTestContainers = videoContainers;
