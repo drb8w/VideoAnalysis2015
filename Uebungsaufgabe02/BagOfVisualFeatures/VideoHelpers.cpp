@@ -14,6 +14,28 @@ using namespace cv;
 using namespace std;
 
 
+vector<Mat> *GetFramesCPP(string videoFileName, vector<Mat> *videoFrames)
+{
+	VideoCapture capture;
+	capture.open(videoFileName);
+	if(! capture.isOpened()) {
+		fprintf(stderr, "Could not initialize capturing..\n");
+		return NULL;
+	}
+
+	while(true) {
+		Mat frame;
+		// get a new frame
+		capture >> frame;
+		if(frame.empty())
+			break;
+
+		videoFrames->push_back(frame.clone());
+	}
+
+	return videoFrames;
+}
+
 vector<Mat> *GetFrames(string videoFileName, vector<Mat> *videoFrames)
 {
 	// http://answers.opencv.org/question/5768/how-can-i-get-one-single-frame-from-a-video-file/
@@ -95,6 +117,12 @@ vector<Mat *> *GetFramePtrs(string videoFileName, vector<Mat *> *videoFramePtrs)
 	//cap.release();
 
 	return videoFramePtrs;
+}
+
+vector<Mat> *GetFramesCPP(string videoFileName)
+{	
+	vector<Mat> *videoFrames = new vector<Mat>();
+	return GetFramesCPP(videoFileName, videoFrames);
 }
 
 vector<Mat> *GetFrames(string videoFileName)

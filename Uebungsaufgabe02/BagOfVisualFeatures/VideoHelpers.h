@@ -3,11 +3,13 @@
 
 #include "stdafx.h"
 #include <vector>
-#include <opencv2\opencv.hpp> 
+#include <opencv2\opencv.hpp>
 
+std::vector<cv::Mat> *GetFramesCPP(std::string videoFileName, std::vector<cv::Mat> *videoFrames);
 std::vector<cv::Mat> *GetFrames(std::string videoFileName, std::vector<cv::Mat> *videoFrames);
 std::vector<cv::Mat *> *GetFramePtrs(std::string videoFileName, std::vector<cv::Mat *> *videoFramePtrs);
 
+std::vector<cv::Mat> *GetFramesCPP(std::string videoFileName);
 std::vector<cv::Mat> *GetFrames(std::string videoFileName);
 std::vector<cv::Mat *> *GetFramePtrs(std::string videoFileName);
 

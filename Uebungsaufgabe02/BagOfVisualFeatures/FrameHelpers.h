@@ -3,7 +3,8 @@
 
 #include "stdafx.h"
 #include <vector>
-#include <opencv2\opencv.hpp> 
+#include <opencv2\opencv.hpp>
+
 
 void convertToGrayscale(const cv::Mat &img, cv::Mat &imgGray);
 

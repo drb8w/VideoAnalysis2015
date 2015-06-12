@@ -1,15 +1,24 @@
+//#define USEFRAMEPTRS
+
 #include "stdafx.h"
 #include <stdio.h>
 #include <list>
 #include <vector>
 #include <cmath>
-#include <opencv2\opencv.hpp> 
+#include <opencv2\opencv.hpp>
+
 #include <opencv2\imgproc\imgproc.hpp>
+
 #include <opencv2\highgui\highgui.hpp>
+
 #include <opencv2\features2d\features2d.hpp>
+
 #include <opencv2\nonfree\features2d.hpp>
+
 #include <opencv2\highgui\highgui.hpp>
+
 #include <opencv2\nonfree\nonfree.hpp>
+
 
 #include "FrameHelpers.h"
 #include "VideoHelpers.h"
@@ -25,7 +34,15 @@ using namespace std;
 
 Mat *BuildVocabulary(vector<Mat *> &trainingFrames)
 {
-	vector<Mat *> *features = ExtractFeatures(trainingFrames);
+	vector<Mat *> *features = ExtractFeaturePtrs(trainingFrames);
+	Mat *featureClusters = ClusterFeaturePtrs(*features);
+
+	return featureClusters;
+}
+
+Mat *BuildVocabulary(vector<Mat> &trainingFrames)
+{
+	vector<Mat> *features = ExtractFeatures(trainingFrames);
 	Mat *featureClusters = ClusterFeatures(*features);
 
 	return featureClusters;
@@ -43,11 +60,15 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 	{
 		VideoContainer *videoContainer = videoContainers[i];
 		int nfeatures = 300; 	// denser sampling of videos
-		vector<Mat *> *features = ExtractFeatures(*(videoContainer->getSpatialTemporalFrames()),nfeatures);
-
-		Mat *collectedFeatures = AppendFeatures(*features);
+#ifdef USEFRAMEPTRS
+		vector<Mat *> *features = ExtractFeaturePtrs(*(videoContainer->getSpatialTemporalFramePtrs()),nfeatures);
+		Mat *collectedFeatures = AppendFeaturePtrs(*features);
 		//// TEST
 		//Mat *collectedFeatures = &(*features)[0];
+#else
+		vector<Mat> *features = ExtractFeatures(*(videoContainer->getSpatialTemporalFrames()),nfeatures);
+		Mat *collectedFeatures = AppendFeatures(*features);
+#endif
 
 		// search represantive words in vocabluary that are closest to features
 		for(int row=0; row<collectedFeatures->rows; row++)
@@ -179,8 +200,12 @@ int main(int argc, char *argv[])
 	//// TEST
 	//vector<string> videoFileNames;
 	//videoFileNames.push_back(videoFileName);
-	
+
+#ifdef USEFRAMEPTRS
 	vector<Mat *> *trainingFrames = new vector<Mat *>();
+#else
+	vector<Mat> *trainingFrames = new vector<Mat>();
+#endif
 	vector<VideoContainer *> *videoContainers = new vector<VideoContainer *>();
 	for(int i=0; i<videoFileNames.size(); i++)
 	{
@@ -189,7 +214,11 @@ int main(int argc, char *argv[])
 
 		VideoContainer *videoContainer = new VideoContainer(videoFileNames[i], classification);
 		videoContainers->push_back(videoContainer);
+#ifdef USEFRAMEPTRS
+		trainingFrames->insert(trainingFrames->end(), videoContainer->getSpatialTemporalFramePtrs()->begin(), videoContainer->getSpatialTemporalFramePtrs()->end());
+#else
 		trainingFrames->insert(trainingFrames->end(), videoContainer->getSpatialTemporalFrames()->begin(), videoContainer->getSpatialTemporalFrames()->end());
+#endif
 	}
 	// Learning phase
 	// ==============
