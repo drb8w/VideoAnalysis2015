@@ -1,12 +1,15 @@
+//#define OWNGRAYCONV
+
 #include "FrameHelpers.h"
 
 #include "stdafx.h"
 //#include <vector>
-#include <opencv2\opencv.hpp> 
+#include <opencv2\opencv.hpp>
 
 using namespace cv;
 using namespace std;
 
+#ifdef OWNGRAYCONV
 void convertToGrayscale(const Mat &img, Mat &imgGray)
 {
 	for(int rowNr = 0; rowNr < img.rows; rowNr++ )
@@ -26,6 +29,12 @@ void convertToGrayscale(const Mat &img, Mat &imgGray)
 		}
 	}
 }
+#else
+void convertToGrayscale(const Mat &img, Mat &imgGray)
+{
+	cvtColor(img, imgGray, CV_RGB2GRAY);
+}
+#endif
 
 vector<Mat> *convertToGrayscales(vector<Mat> *rgbFrames, vector<Mat> *grayFrames)
 {
