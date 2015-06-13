@@ -19,7 +19,17 @@ private:
 public:
 	ConfusionMatrix(std::vector<Classification *> &classifications);
 
+	std::vector<Classification *> *getClassifications();
+
 	void add(int groundTruthHash, int predictionHash);
+
+	float Precision(Classification &classification);
+	float Sensitivity(Classification &classification);
+
+	float TruePositives(Classification &classification);
+	float FalsePositives(Classification &classification);
+	float TrueNegatives(Classification &classification);
+	float FalseNegatives(Classification &classification);
 
 };
 
