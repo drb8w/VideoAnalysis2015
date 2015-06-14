@@ -219,11 +219,28 @@ int main(int argc, char *argv[])
 	//string videoFileName = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/1_Kiss/Kiss_001.avi";
 	string videoFileName = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/1_Kiss/Kiss_002.avi";
 
-	//string videoFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/";
-	string videoFileDir = "C:/Users/Christian/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/Assignment2/training";
+	string videoFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/";
+	//string videoFileDir = "C:/Users/Christian/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/Assignment2/training";
 	ArgumentPath(argc, argv, 1, videoFileDir);
 	
 	vector<string> videoFileNames = getFilesPathWithinFolder(videoFileDir);
+
+	if (videoFileNames.size() == 0)
+	{
+		cout << "No training video files found.";
+		return -1;
+	}
+
+	string videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
+	ArgumentPath(argc, argv, 2, videoTestFileDir);
+	vector<string> videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
+
+	if (videoTestFileNames.size() == 0)
+	{
+		cout << "No test video files found.";
+		return -1;
+	}
+
 	//// TEST
 	//vector<string> videoFileNames;
 	//videoFileNames.push_back(videoFileName);
@@ -264,8 +281,19 @@ int main(int argc, char *argv[])
 	map<int, string> *hashClassificationMap = new map<int, string>();
 	CvRTrees *classifier = TrainClassifier(*videoMetaDataSet, *hashClassificationMap);
 
-	string videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
-	vector<VideoContainer *> *videoTestContainers = videoContainers;
+	//string videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
+	//ArgumentPath(argc, argv, 2, videoTestFileDir);
+	//vector<string> videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
+
+	vector<VideoContainer *> *videoTestContainers = new vector<VideoContainer *>();
+	for(int i=0; i<videoTestFileNames.size(); i++)
+	{
+		vector<string> tokens = splitString(videoTestFileNames[i], "/");
+		string classification = tokens[tokens.size()-1];
+
+		VideoContainer *videoContainer = new VideoContainer(videoTestFileNames[i], classification);
+		videoTestContainers->push_back(videoContainer);
+	}
 
 	ConfusionMatrix *confusionMatrix = ClassifyVideos(*videoTestContainers, *dictionary, *classifier);
 
