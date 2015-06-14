@@ -12,22 +12,30 @@
 using namespace cv;
 using namespace std; 
 
-VideoContainer::VideoContainer(string videoFileName, string classification)
+VideoContainer::VideoContainer(string videoFileName, string classification, bool lazy)
 {
 	this->m_videoFileName = videoFileName;
 	this->m_classification = classification;
+	this->m_lazy = lazy;
 
+	if (lazy)
+	{
+		this->m_videoFrames = NULL;
+		this->m_spatialTemporalFrames = NULL;
+	}
+	else
+	{
 	// read frames once
 #ifdef USEFRAMEPTRS
-	this->m_videoFrames = GetFramePtrs(videoFileName);
-	this->m_spatialTemporalFrames = new vector<Mat *>();
-	GetSpatialTemporalFramePtrs(*(this->m_videoFrames), this->m_spatialTemporalFrames);
+		this->m_videoFrames = GetFramePtrs(videoFileName);
+		this->m_spatialTemporalFrames = new vector<Mat *>();
+		GetSpatialTemporalFramePtrs(*(this->m_videoFrames), this->m_spatialTemporalFrames);
 #else
-	this->m_videoFrames = GetFramesCPP(videoFileName);
-	this->m_spatialTemporalFrames = new vector<Mat>();
-	this->m_videoFrames = GetSpatialTemporalFrames(this->m_spatialTemporalFrames);
+		this->m_videoFrames = GetFramesCPP(videoFileName);
+		this->m_spatialTemporalFrames = new vector<Mat>();
+		this->m_spatialTemporalFrames = GetSpatialTemporalFrames(this->m_videoFrames);
 #endif
-
+	}
 }
 
 string VideoContainer::getVideoFileName()
@@ -43,21 +51,73 @@ string VideoContainer::getClassification()
 #ifdef USEFRAMEPTRS
 vector<Mat *> *VideoContainer::getFramePtrs()
 {
+	if (this->m_lazy && this->m_videoFrames == NULL)
+	{
+		// read frames once
+		this->m_videoFrames = GetFramePtrs(videoFileName);
+	}	
 	return this->m_videoFrames;
 }
 
 vector<Mat *> *VideoContainer::getSpatialTemporalFramePtrs()
 {
+	if (this->m_lazy && this->m_spatialTemporalFrames == NULL)
+	{
+		// read frames once
+		this->m_videoFrames = getFramePtrs();
+		this->m_spatialTemporalFrames = new vector<Mat *>();
+		GetSpatialTemporalFramePtrs(*(this->m_videoFrames), this->m_spatialTemporalFrames);
+	}
 	return this->m_spatialTemporalFrames;
 }
 #else
 vector<Mat> *VideoContainer::getFrames()
 {
+	if (this->m_lazy && this->m_videoFrames == NULL)
+	{
+		// read frames once
+		this->m_videoFrames = GetFramesCPP(this->m_videoFileName);
+	}
 	return this->m_videoFrames;
 }
 
 vector<Mat> *VideoContainer::getSpatialTemporalFrames()
 {
+	if (this->m_lazy && this->m_spatialTemporalFrames == NULL)
+	{
+		// read frames once
+		this->m_videoFrames = getFrames();
+		this->m_spatialTemporalFrames = new vector<Mat>();
+		this->m_spatialTemporalFrames = GetSpatialTemporalFrames(this->m_videoFrames);
+	}
 	return this->m_spatialTemporalFrames;
 }
+
+void VideoContainer::release()
+{
+	if (this->m_lazy)
+	{
+		if (this->m_videoFrames != NULL)
+		{
+			for(int i=0; i<this->m_videoFrames->size(); i++)
+				if (!(*this->m_videoFrames)[i].empty())
+					(*this->m_videoFrames)[i].release(); // check if memory is freed
+		
+			delete this->m_videoFrames;
+			this->m_videoFrames = NULL;
+		}
+
+		if (this->m_spatialTemporalFrames != NULL)
+		{
+			for(int i=0; i<this->m_spatialTemporalFrames->size(); i++)
+				if (!(*this->m_spatialTemporalFrames)[i].empty())
+					(*this->m_spatialTemporalFrames)[i].release(); // check if memory is freed
+		
+			delete this->m_spatialTemporalFrames;
+			this->m_spatialTemporalFrames = NULL;
+		}
+	}
+}
+
+
 #endif

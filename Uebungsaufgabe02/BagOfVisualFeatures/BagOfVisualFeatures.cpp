@@ -42,6 +42,29 @@ Mat *BuildVocabulary(vector<Mat> &trainingFrames)
 	return featureClusters;
 }
 
+Mat *BuildVocabulary(vector<VideoContainer *> &videoContainers)
+{
+	vector<Mat> *fullFeatures = new vector<Mat>();
+	for (int i=0; i<videoContainers.size(); i++)
+	{
+		VideoContainer *videoContainer = videoContainers[i];
+		vector<Mat> *trainingFrames = videoContainer->getSpatialTemporalFrames();
+		vector<Mat> *features = ExtractFeatures(*trainingFrames);
+		
+		videoContainer->release();
+		trainingFrames->clear(); // TODO: check double deletion?
+		delete trainingFrames;
+
+		for(int j=0; j<features->size(); j++)
+			fullFeatures->push_back((*features)[i].clone());
+
+		features->clear();
+		delete features;
+	}
+	Mat *featureClusters = ClusterFeatures(*fullFeatures);		
+	return featureClusters;
+}
+
 vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary)//, vector<Mat> &histograms, vector<string> &classifications)
 {
 	// output featurepoints and labels for videos
@@ -60,7 +83,13 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 		//// TEST
 		//Mat *collectedFeatures = &(*features)[0];
 #else
-		vector<Mat> *features = ExtractFeatures(*(videoContainer->getSpatialTemporalFrames()),nfeatures);
+		vector<Mat> *spatialTemporalFrames = videoContainer->getSpatialTemporalFrames();
+		vector<Mat> *features = ExtractFeatures(*spatialTemporalFrames,nfeatures);
+		
+		videoContainer->release();
+		spatialTemporalFrames->clear(); // TODO: check double deletion?
+		delete spatialTemporalFrames;
+
 		Mat *collectedFeatures = AppendFeatures(*features);
 #endif
 
@@ -198,11 +227,11 @@ int main(int argc, char *argv[])
 	//vector<string> videoFileNames;
 	//videoFileNames.push_back(videoFileName);
 
-#ifdef USEFRAMEPTRS
-	vector<Mat *> *trainingFrames = new vector<Mat *>();
-#else
-	vector<Mat> *trainingFrames = new vector<Mat>();
-#endif
+//#ifdef USEFRAMEPTRS
+//	vector<Mat *> *trainingFrames = new vector<Mat *>();
+//#else
+//	vector<Mat> *trainingFrames = new vector<Mat>();
+//#endif
 	vector<VideoContainer *> *videoContainers = new vector<VideoContainer *>();
 	for(int i=0; i<videoFileNames.size(); i++)
 	{
@@ -211,17 +240,18 @@ int main(int argc, char *argv[])
 
 		VideoContainer *videoContainer = new VideoContainer(videoFileNames[i], classification);
 		videoContainers->push_back(videoContainer);
-#ifdef USEFRAMEPTRS
-		trainingFrames->insert(trainingFrames->end(), videoContainer->getSpatialTemporalFramePtrs()->begin(), videoContainer->getSpatialTemporalFramePtrs()->end());
-#else
-		trainingFrames->insert(trainingFrames->end(), videoContainer->getSpatialTemporalFrames()->begin(), videoContainer->getSpatialTemporalFrames()->end());
-#endif
+//#ifdef USEFRAMEPTRS
+//		trainingFrames->insert(trainingFrames->end(), videoContainer->getSpatialTemporalFramePtrs()->begin(), videoContainer->getSpatialTemporalFramePtrs()->end());
+//#else
+//		trainingFrames->insert(trainingFrames->end(), videoContainer->getSpatialTemporalFrames()->begin(), videoContainer->getSpatialTemporalFrames()->end());
+//#endif
 	}
 	// Learning phase
 	// ==============
 	// apply feature extraction on all collected frames
 
-	Mat *vocabulary = BuildVocabulary(*trainingFrames);
+	//Mat *vocabulary = BuildVocabulary(*trainingFrames);
+	Mat *vocabulary = BuildVocabulary(*videoContainers);
 
 	FeatureDictionary *dictionary = new FeatureDictionary(vocabulary);
 	

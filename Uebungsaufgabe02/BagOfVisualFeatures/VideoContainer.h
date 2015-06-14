@@ -12,6 +12,7 @@
 class VideoContainer
 {
 private:
+	bool m_lazy;
 	std::string m_videoFileName;
 	std::string m_classification;
 
@@ -24,7 +25,7 @@ private:
 #endif
 
 public:
-	VideoContainer(std::string videoFileName, std::string classification);
+	VideoContainer(std::string videoFileName, std::string classification, bool lazy = true);
 
 	std::string getVideoFileName();
 	std::string getClassification();
@@ -36,6 +37,8 @@ public:
 	std::vector<cv::Mat> *getFrames();
 	std::vector<cv::Mat> *getSpatialTemporalFrames();
 #endif
+
+	void release();
 
 };
 
