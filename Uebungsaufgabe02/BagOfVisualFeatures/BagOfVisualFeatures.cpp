@@ -52,8 +52,8 @@ Mat *BuildVocabulary(vector<VideoContainer *> &videoContainers)
 		vector<Mat> *features = ExtractFeatures(*trainingFrames);
 		
 		videoContainer->release();
-		trainingFrames->clear(); // TODO: check double deletion?
-		delete trainingFrames;
+		//trainingFrames->clear(); // TODO: check double deletion?
+		//delete trainingFrames;
 
 		for(int j=0; j<features->size(); j++)
 			fullFeatures->push_back((*features)[i].clone());
@@ -87,8 +87,8 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 		vector<Mat> *features = ExtractFeatures(*spatialTemporalFrames,nfeatures);
 		
 		videoContainer->release();
-		spatialTemporalFrames->clear(); // TODO: check double deletion?
-		delete spatialTemporalFrames;
+		//spatialTemporalFrames->clear(); // TODO: check double deletion?
+		//delete spatialTemporalFrames;
 
 		Mat *collectedFeatures = AppendFeatures(*features);
 #endif
@@ -219,7 +219,8 @@ int main(int argc, char *argv[])
 	//string videoFileName = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/1_Kiss/Kiss_001.avi";
 	string videoFileName = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/1_Kiss/Kiss_002.avi";
 
-	string videoFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/";
+	//string videoFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/";
+	string videoFileDir = "C:/Users/Christian/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/Assignment2/training";
 	ArgumentPath(argc, argv, 1, videoFileDir);
 	
 	vector<string> videoFileNames = getFilesPathWithinFolder(videoFileDir);
