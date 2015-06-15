@@ -177,18 +177,16 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 	vector<VideoMetaData *> *videoMetaDataSet = new vector<VideoMetaData *>();
 
 	int historamBins = dictionary.getVocabulary()->rows;
-	Mat *histogram = new Mat(1, historamBins, CV_32F);
-
+	
 	for (int i=0; i<videoContainers.size(); i++)
 	{
+		Mat *histogram = new Mat(1, historamBins, CV_32F);
+
 		VideoContainer *videoContainer = videoContainers[i];
-		//int nfeatures = 300; 	// denser sampling of videos
 		int nfeatures = 3*NFEATURES; 	// denser sampling of videos
 #ifdef USEFRAMEPTRS
 		vector<Mat *> *features = ExtractFeaturePtrs(*(videoContainer->getSpatialTemporalFramePtrs()),nfeatures);
 		Mat *collectedFeatures = AppendFeaturePtrs(*features);
-		//// TEST
-		//Mat *collectedFeatures = &(*features)[0];
 #else
 		vector<Mat> *spatialTemporalFrames = videoContainer->getSpatialTemporalFrames();
 		vector<Mat> *features = ExtractFeatures(*spatialTemporalFrames,nfeatures);
@@ -224,11 +222,7 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 		for (int histBin=0; histBin<historamBins; histBin++)
 			histogram->at<float>(0,histBin) = histogram->at<float>(0,histBin)/collectedFeatures->rows;
 
-		//histograms.push_back(histogram);
-
-		// label for normalized histogram
-		//classifications.push_back(videoContainer->getClassification());
-
+		// create video meta data
 		VideoMetaData *videoMetaData = new VideoMetaData(histogram, videoContainer->getClassification());
 		videoMetaDataSet->push_back(videoMetaData);
 	}
@@ -265,7 +259,7 @@ CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, st
 	{
 		int hash = videoMetaDataSet[j]->getClassification()->getHash();
 		hashClassificationMap[hash] = videoMetaDataSet[j]->getClassification()->getName();
-		trainingClassification.at<float>(0,j) = hash;
+		trainingClassification.at<float>(j,0) = hash;
 	}
 	rtree->train(trainingData, CV_ROW_SAMPLE, trainingClassification,
 				cv::Mat(), cv::Mat(), cv::Mat(), cv::Mat(), params);
@@ -285,9 +279,10 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 	for(int i=0; i<videoMetaDataSet->size(); i++)
 	{
 		Mat *histogram = (*videoMetaDataSet)[i]->getHistogram();
-		float classification = rTreeClassifier.predict(*histogram);
+		int classification = (int)rTreeClassifier.predict(*histogram);
+		int hash = (*videoMetaDataSet)[i]->getClassification()->getHash();
 
-		confusionMatrix->add((*videoMetaDataSet)[i]->getClassification()->getHash(), classification);
+		confusionMatrix->add(hash, classification);
 	}
 
 	return confusionMatrix;
@@ -382,8 +377,11 @@ int main(int argc, char *argv[])
 		// save vocabulary
 		string vocabularyDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
 		ArgumentPath(argc, argv, 4, vocabularyDir);
-		string vocabularyFileName = vocabularyDir + "Vocalulary";
-		imwrite( "vocabularyFileName", *vocabulary );
+		string vocabularyFileName = vocabularyDir + "Vocalulary.yml";
+
+		FileStorage fs(vocabularyFileName, FileStorage::WRITE);
+		fs << "vocabulary" << *vocabulary;
+		fs.release();
 
 		dictionary = new FeatureDictionary(vocabulary);
 	
@@ -406,8 +404,11 @@ int main(int argc, char *argv[])
 		// load vocabulary
 		string vocabularyDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
 		ArgumentPath(argc, argv, 2, vocabularyDir);
-		string vocabularyFileName = vocabularyDir + "Vocalulary";
-		Mat voc = imread( "vocabularyFileName");
+		string vocabularyFileName = vocabularyDir + "Vocalulary.yml";
+
+		Mat voc;
+		FileStorage fs2(vocabularyFileName, FileStorage::READ);
+		fs2["vocabulary"] >> voc;
 
 		if (voc.empty())
 		{
@@ -417,6 +418,7 @@ int main(int argc, char *argv[])
 
 		vocabulary = new Mat(voc.size(), voc.type());
 		voc.copyTo(*vocabulary);
+		dictionary = new FeatureDictionary(vocabulary);
 
 		// load classifier
 		string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
@@ -440,7 +442,7 @@ int main(int argc, char *argv[])
 	
 	// ======================================================================================================
 
-	if (strcmp(mode.c_str(),"ALL") == 0 ||strcmp(mode.c_str(),"CLASSIFY") == 0)
+	if (strcmp(mode.c_str(),"FULL") == 0 ||strcmp(mode.c_str(),"CLASSIFY") == 0)
 	{
 		vector<VideoContainer *> *videoTestContainers = new vector<VideoContainer *>();
 		for(int i=0; i<videoTestFileNames.size(); i++)

@@ -20,6 +20,9 @@ ConfusionMatrix::ConfusionMatrix(vector<Classification *> &classifications)
 	for(int i=0; i < classifications.size(); i++)
 	{
 		this->m_confusionMatrix[i] = new int[classifications.size()];
+		for(int j=0; j < classifications.size(); j++)
+			this->m_confusionMatrix[i][j] = 0;
+
 		(*(this->m_classHashIndexMap))[classifications[i]->getHash()] = i;
 	}
 

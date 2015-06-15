@@ -70,92 +70,80 @@ vector<Mat *> *ExtractFeaturePtrs(vector<Mat *> &frames, int nfeatures = NFEATUR
 
 Mat *AppendFeatures(vector<Mat> &features)
 {
-	// create new Mat
-	int rows = features[0].rows;
-	int cols = features[0].cols;
-	int Rows = rows * features.size();
-	int Cols = cols;
+	// 1st: determine how many rows the resulting matrix must have
+	int Rows = 0;
+	for(int i=0; i<features.size(); i++)
+		if (!features[i].empty())
+			Rows += features[i].rows;
+	int Cols = features[0].cols;
 	int type = features[0].type();
+	// create new Mat
 	Mat *featureMat = new Mat(Rows, Cols, type);
 
-	// move every row of Mats in combined Mat
+	// 2nd: copy data with the right row offset to matrix
+	int rowOffset = 0;
 	for(int i=0; i<features.size(); i++)
 	{
-		//// TEST
-		//float test1 = (*features)[i].at<float>(0,0);
-		//float test10 = (*features)[i].at<float>(10,10);
-
-		// Rect(int x, int y, int width, int height) 
-		features[i].copyTo( (*featureMat)( Rect(0, i*rows, cols, rows) ) );
-		
-		//// TEST
-		//float test2 = featureMat.at<float>(i*rows,0);
-		//float test20 = featureMat.at<float>(i*rows+10,10);
-		//std::vector<float> myArray;
-		//myArray.assign((float*)featureMat.datastart, (float*)featureMat.dataend);
-		//int s=0;
+		if (!features[i].empty())
+		{
+			features[i].copyTo( (*featureMat)( Rect(0, rowOffset, Cols, features[i].rows) ) );
+			rowOffset += features[i].rows;
+		}
 	}
+
 	return featureMat;
 }
 
 Mat *AppendFeaturePtrs(vector<Mat *> &features)
 {
-	// create new Mat
-	int rows = features[0]->rows;
-	int cols = features[0]->cols;
-	int Rows = rows * features.size();
-	int Cols = cols;
+	// 1st: determine how many rows the resulting matrix must have
+	int Rows = 0;
+	for(int i=0; i<features.size(); i++)
+		if (features[i] != NULL && !features[i]->empty())
+			Rows += features[i]->rows;
+	int Cols = features[0]->cols;
 	int type = features[0]->type();
+	// create new Mat
 	Mat *featureMat = new Mat(Rows, Cols, type);
 
-	// move every row of Mats in combined Mat
+	// 2nd: copy data with the right row offset to matrix
+	int rowOffset = 0;
 	for(int i=0; i<features.size(); i++)
 	{
-		//// TEST
-		//float test1 = (*features)[i].at<float>(0,0);
-		//float test10 = (*features)[i].at<float>(10,10);
-
-		// Rect(int x, int y, int width, int height) 
-		features[i]->copyTo( (*featureMat)( Rect(0, i*rows, cols, rows) ) );
-		
-		//// TEST
-		//float test2 = featureMat.at<float>(i*rows,0);
-		//float test20 = featureMat.at<float>(i*rows+10,10);
-		//std::vector<float> myArray;
-		//myArray.assign((float*)featureMat.datastart, (float*)featureMat.dataend);
-		//int s=0;
+		if (features[i] != NULL && !features[i]->empty())
+		{
+			features[i]->copyTo( (*featureMat)( Rect(0, rowOffset, Cols, features[i]->rows) ) );
+			rowOffset += features[i]->rows;
+		}
 	}
+
 	return featureMat;
 }
 
 Mat *ClusterFeatures(vector<Mat> &features, int numClusters = NUMCLUSTERS) // 50*50 from CompVis or 480 from paper
 {
-	// create new Mat
-	int rows = features[0].rows;
-	int cols = features[0].cols;
-	int Rows = rows * features.size();
-	int Cols = cols;
+	// 1st: determine how many rows the resulting matrix must have
+	int Rows = 0;
+	for(int i=0; i<features.size(); i++)
+		if (!features[i].empty())
+			Rows += features[i].rows;
+	int Cols = features[0].cols;
 	int type = features[0].type();
+	// create new Mat
 	Mat featureMat(Rows, Cols, type);
 
-	// move every row of Mats in combined Mat
+	// 2nd: copy data with the right row offset to matrix
+	int rowOffset = 0;
 	for(int i=0; i<features.size(); i++)
 	{
-		//// TEST
-		//float test1 = (*features)[i].at<float>(0,0);
-		//float test10 = (*features)[i].at<float>(10,10);
+		if (!features[i].empty())
+		{
+			features[i].copyTo( featureMat( Rect(0, rowOffset, Cols, features[i].rows) ) );
+			rowOffset += features[i].rows;
+		}
+	}
 
-		// Rect(int x, int y, int width, int height) 
-		features[i].copyTo( featureMat( Rect(0, i*rows, cols, rows) ) );
-		
-		//// TEST
-		//float test2 = featureMat.at<float>(i*rows,0);
-		//float test20 = featureMat.at<float>(i*rows+10,10);
-		//std::vector<float> myArray;
-		//myArray.assign((float*)featureMat.datastart, (float*)featureMat.dataend);
-		//int s=0;
-	}	
-
+	// 3rd: cluster features
 	Mat bestLabels;
 	int attempts = 5;
 	Mat centers;
@@ -169,33 +157,28 @@ Mat *ClusterFeatures(vector<Mat> &features, int numClusters = NUMCLUSTERS) // 50
 
 Mat *ClusterFeaturePtrs(vector<Mat *> &features, int numClusters = NUMCLUSTERS) // 50*50 from CompVis or 480 from paper
 {
-	// create new Mat
-	int rows = features[0]->rows;
-	int cols = features[0]->cols;
-	int Rows = rows * features.size();
-	int Cols = cols;
+	// 1st: determine how many rows the resulting matrix must have
+	int Rows = 0;
+	for(int i=0; i<features.size(); i++)
+		if (features[i] != NULL && !features[i]->empty())
+			Rows += features[i]->rows;
+	int Cols = features[0]->cols;
 	int type = features[0]->type();
+	// create new Mat
 	Mat featureMat(Rows, Cols, type);
 
-	// move every row of Mats in combined Mat
+	// 2nd: copy data with the right row offset to matrix
+	int rowOffset = 0;
 	for(int i=0; i<features.size(); i++)
 	{
-		//// TEST
-		//float test1 = (*features)[i].at<float>(0,0);
-		//float test10 = (*features)[i].at<float>(10,10);
-
-		// Rect(int x, int y, int width, int height) 
-		features[i]->copyTo( featureMat( Rect(0, i*rows, cols, rows) ) );
-		
-		//// TEST
-		//float test2 = featureMat.at<float>(i*rows,0);
-		//float test20 = featureMat.at<float>(i*rows+10,10);
-		//std::vector<float> myArray;
-		//myArray.assign((float*)featureMat.datastart, (float*)featureMat.dataend);
-		//int s=0;
+		if(features[i] != NULL && !features[i]->empty())
+		{
+			features[i]->copyTo( featureMat( Rect(0, rowOffset, Cols, features[i]->rows) ) );
+			rowOffset += features[i]->rows;
+		}
 	}
-	
 
+	// 3rd: cluster features
 	Mat bestLabels;
 	int attempts = 5;
 	Mat centers;

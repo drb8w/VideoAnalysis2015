@@ -1,3 +1,5 @@
+//#define ONLYSPACIALFRAMES
+
 #include "stdafx.h"
 //#include <stdio.h>
 //#include <string.h>
@@ -27,10 +29,17 @@ VideoContainer::VideoContainer(string videoFileName, string classification, bool
 	{
 	// read frames once
 #ifdef USEFRAMEPTRS
+	#ifdef ONLYSPACIALFRAMES
+			this->m_spatialTemporalFrames = GetFramePtrs(videoFileName);
+	#else
 		this->m_videoFrames = GetFramePtrs(videoFileName);
 		this->m_spatialTemporalFrames = new vector<Mat *>();
 		GetSpatialTemporalFramePtrs(*(this->m_videoFrames), this->m_spatialTemporalFrames);
+	#endif
 #else
+	#ifdef ONLYSPACIALFRAMES
+			this->m_spatialTemporalFrames = GetFrames(videoFileName);
+	#else
 		//this->m_videoFrames = GetFramesCPP(videoFileName);
 		this->m_videoFrames = GetFrames(videoFileName);
 
@@ -43,6 +52,7 @@ VideoContainer::VideoContainer(string videoFileName, string classification, bool
 
 		this->m_spatialTemporalFrames = new vector<Mat>();
 		this->m_spatialTemporalFrames = GetSpatialTemporalFrames(*(this->m_videoFrames));
+	#endif
 #endif
 	}
 }
@@ -72,10 +82,15 @@ vector<Mat *> *VideoContainer::getSpatialTemporalFramePtrs()
 {
 	if (this->m_lazy && this->m_spatialTemporalFrames == NULL)
 	{
+	#ifdef ONLYSPACIALFRAMES
+		// read frames once
+		this->m_spatialTemporalFrames = getFramePtrs();
+	#else
 		// read frames once
 		this->m_videoFrames = getFramePtrs();
 		this->m_spatialTemporalFrames = new vector<Mat *>();
 		GetSpatialTemporalFramePtrs(*(this->m_videoFrames), this->m_spatialTemporalFrames);
+	#endif
 	}
 	return this->m_spatialTemporalFrames;
 }
@@ -122,6 +137,10 @@ vector<Mat> *VideoContainer::getSpatialTemporalFrames()
 {
 	if (this->m_lazy && this->m_spatialTemporalFrames == NULL)
 	{
+	#ifdef ONLYSPACIALFRAMES
+		// read frames once
+		this->m_spatialTemporalFrames = getFrames();
+	#else
 		// read frames once
 		this->m_videoFrames = getFrames();
 
@@ -134,6 +153,7 @@ vector<Mat> *VideoContainer::getSpatialTemporalFrames()
 
 		this->m_spatialTemporalFrames = new vector<Mat>();
 		this->m_spatialTemporalFrames = GetSpatialTemporalFrames(*(this->m_videoFrames));
+	#endif
 	}
 	return this->m_spatialTemporalFrames;
 }
