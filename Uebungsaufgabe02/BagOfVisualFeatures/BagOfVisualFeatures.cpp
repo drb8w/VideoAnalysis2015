@@ -1,6 +1,11 @@
 //#define USEFRAMEPTRS
 
 #include "stdafx.h"
+
+#include "windows.h"
+#include "psapi.h"
+#include<tchar.h>
+
 #include <stdio.h>
 #include <list>
 #include <vector>
@@ -26,6 +31,81 @@
 using namespace cv;
 using namespace std;
 
+
+void PrintMemoryInfo( DWORD processID )
+{
+    HANDLE hProcess;
+    PROCESS_MEMORY_COUNTERS pmc;
+
+    // Print the process identifier.
+
+    printf( "\nProcess ID: %u\n", processID );
+
+    // Print information about the memory usage of the process.
+
+    hProcess = OpenProcess(  PROCESS_QUERY_INFORMATION |
+                                    PROCESS_VM_READ,
+                                    FALSE, processID );
+    if (NULL == hProcess)
+        return;
+
+    if ( GetProcessMemoryInfo( hProcess, &pmc, sizeof(pmc)) )
+    {
+        printf( "\tPageFaultCount: 0x%08X\n", pmc.PageFaultCount );
+        printf( "\tPeakWorkingSetSize: 0x%08X\n", 
+                  pmc.PeakWorkingSetSize );
+        printf( "\tWorkingSetSize: 0x%08X\n", pmc.WorkingSetSize );
+        printf( "\tQuotaPeakPagedPoolUsage: 0x%08X\n", 
+                  pmc.QuotaPeakPagedPoolUsage );
+        printf( "\tQuotaPagedPoolUsage: 0x%08X\n", 
+                  pmc.QuotaPagedPoolUsage );
+        printf( "\tQuotaPeakNonPagedPoolUsage: 0x%08X\n", 
+                  pmc.QuotaPeakNonPagedPoolUsage );
+        printf( "\tQuotaNonPagedPoolUsage: 0x%08X\n", 
+                  pmc.QuotaNonPagedPoolUsage );
+        printf( "\tPagefileUsage: 0x%08X\n", pmc.PagefileUsage ); 
+        printf( "\tPeakPagefileUsage: 0x%08X\n", 
+                  pmc.PeakPagefileUsage );
+    }
+
+    CloseHandle( hProcess );
+}
+
+void PrintMemoryUsage()
+{
+	PrintMemoryInfo( GetCurrentProcessId() );
+}
+
+//void PrintMemoryUsage()
+//{
+//	// Use to convert bytes to MB
+//	int DIV = 1048576;
+//
+//
+//	// Specify the width of the field in which to print the numbers. 
+//	// The asterisk in the format specifier "%*I64d" takes an integer 
+//	// argument and uses it to pad and right justify the number.
+//
+//	int WIDTH =  7;
+//	
+//	MEMORYSTATUSEX statex;
+//
+//	statex.dwLength = sizeof (statex);
+//
+//	GlobalMemoryStatusEx (&statex);
+//
+//	_tprintf (TEXT("There is  %*ld percent of memory in use.\n"),WIDTH, statex.dwMemoryLoad);
+//	_tprintf (TEXT("There are %*I64d total Mbytes of physical memory.\n"),WIDTH,statex.ullTotalPhys/DIV);
+//	_tprintf (TEXT("There are %*I64d free Mbytes of physical memory.\n"),WIDTH, statex.ullAvailPhys/DIV);
+//	_tprintf (TEXT("There are %*I64d total Mbytes of paging file.\n"),WIDTH, statex.ullTotalPageFile/DIV);
+//	_tprintf (TEXT("There are %*I64d free Mbytes of paging file.\n"),WIDTH, statex.ullAvailPageFile/DIV);
+//	_tprintf (TEXT("There are %*I64d total Mbytes of virtual memory.\n"),WIDTH, statex.ullTotalVirtual/DIV);
+//	_tprintf (TEXT("There are %*I64d free Mbytes of virtual memory.\n"),WIDTH, statex.ullAvailVirtual/DIV);
+//	_tprintf (TEXT("There are %*I64d free Mbytes of extended memory.\n"),WIDTH, statex.ullAvailExtendedVirtual/DIV);
+//
+//}
+
+
 Mat *BuildVocabulary(vector<Mat *> &trainingFrames)
 {
 	vector<Mat *> *features = ExtractFeaturePtrs(trainingFrames);
@@ -44,24 +124,50 @@ Mat *BuildVocabulary(vector<Mat> &trainingFrames)
 
 Mat *BuildVocabulary(vector<VideoContainer *> &videoContainers)
 {
+#ifdef USEFRAMEPTRS
+	vector<Mat *> *fullFeatures = new vector<Mat *>();
+#else
 	vector<Mat> *fullFeatures = new vector<Mat>();
+#endif
 	for (int i=0; i<videoContainers.size(); i++)
 	{
 		VideoContainer *videoContainer = videoContainers[i];
+
+		// TEST
+		cout << "video " + videoContainer->getVideoFileName() + ": ExtractFeatures \n";
+
+#ifdef USEFRAMEPTRS
+		vector<Mat *> *trainingFrames = videoContainer->getSpatialTemporalFramePtrs();
+		vector<Mat *> *features = ExtractFeaturePtrs(*trainingFrames);
+#else
 		vector<Mat> *trainingFrames = videoContainer->getSpatialTemporalFrames();
 		vector<Mat> *features = ExtractFeatures(*trainingFrames);
-		
+#endif	
 		videoContainer->release();
 		//trainingFrames->clear(); // TODO: check double deletion?
 		//delete trainingFrames;
 
+		//PrintMemoryUsage();
+
+#ifdef USEFRAMEPTRS
+		for(int j=0; j<features->size(); j++)
+			fullFeatures->push_back((*features)[i]);
+#else
 		for(int j=0; j<features->size(); j++)
 			fullFeatures->push_back((*features)[i].clone());
+#endif
 
 		features->clear();
 		delete features;
 	}
-	Mat *featureClusters = ClusterFeatures(*fullFeatures);		
+	// TEST
+	cout << "ClusterFeatures \n";
+
+#ifdef USEFRAMEPTRS
+	Mat *featureClusters = ClusterFeaturePtrs(*fullFeatures);
+#else
+	Mat *featureClusters = ClusterFeatures(*fullFeatures);
+#endif
 	return featureClusters;
 }
 
@@ -76,7 +182,8 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 	for (int i=0; i<videoContainers.size(); i++)
 	{
 		VideoContainer *videoContainer = videoContainers[i];
-		int nfeatures = 300; 	// denser sampling of videos
+		//int nfeatures = 300; 	// denser sampling of videos
+		int nfeatures = 3*NFEATURES; 	// denser sampling of videos
 #ifdef USEFRAMEPTRS
 		vector<Mat *> *features = ExtractFeaturePtrs(*(videoContainer->getSpatialTemporalFramePtrs()),nfeatures);
 		Mat *collectedFeatures = AppendFeaturePtrs(*features);
@@ -216,93 +323,138 @@ void PrintConfusionMatrix(ConfusionMatrix &confusionMatrix)
 
 int main(int argc, char *argv[])
 {
-	//string videoFileName = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/1_Kiss/Kiss_001.avi";
-	string videoFileName = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/1_Kiss/Kiss_002.avi";
+	string mode = "FULL";
+	ArgumentString(argc, argv, 1, mode);
 
-	string videoFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/";
-	//string videoFileDir = "C:/Users/Christian/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/Assignment2/training";
-	ArgumentPath(argc, argv, 1, videoFileDir);
+	Mat *vocabulary = NULL;
+	FeatureDictionary *dictionary = NULL;
+	CvRTrees *classifier = NULL;
+
+	string videoTestFileDir = "";
+	vector<string> videoTestFileNames;
+
+	// ======================================================================================================
 	
-	vector<string> videoFileNames = getFilesPathWithinFolder(videoFileDir);
-
-	if (videoFileNames.size() == 0)
+	if (strcmp(mode.c_str(),"FULL") == 0 || strcmp(mode.c_str(),"TRAIN") == 0 )
 	{
-		cout << "No training video files found.";
-		return -1;
-	}
-
-	string videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
-	ArgumentPath(argc, argv, 2, videoTestFileDir);
-	vector<string> videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
-
-	if (videoTestFileNames.size() == 0)
-	{
-		cout << "No test video files found.";
-		return -1;
-	}
-
-	//// TEST
-	//vector<string> videoFileNames;
-	//videoFileNames.push_back(videoFileName);
-
-//#ifdef USEFRAMEPTRS
-//	vector<Mat *> *trainingFrames = new vector<Mat *>();
-//#else
-//	vector<Mat> *trainingFrames = new vector<Mat>();
-//#endif
-	vector<VideoContainer *> *videoContainers = new vector<VideoContainer *>();
-	for(int i=0; i<videoFileNames.size(); i++)
-	{
-		vector<string> tokens = splitString(videoFileNames[i], "/");
-		string classification = tokens[tokens.size()-1];
-
-		VideoContainer *videoContainer = new VideoContainer(videoFileNames[i], classification);
-		videoContainers->push_back(videoContainer);
-//#ifdef USEFRAMEPTRS
-//		trainingFrames->insert(trainingFrames->end(), videoContainer->getSpatialTemporalFramePtrs()->begin(), videoContainer->getSpatialTemporalFramePtrs()->end());
-//#else
-//		trainingFrames->insert(trainingFrames->end(), videoContainer->getSpatialTemporalFrames()->begin(), videoContainer->getSpatialTemporalFrames()->end());
-//#endif
-	}
-	// Learning phase
-	// ==============
-	// apply feature extraction on all collected frames
-
-	//Mat *vocabulary = BuildVocabulary(*trainingFrames);
-	Mat *vocabulary = BuildVocabulary(*videoContainers);
-
-	FeatureDictionary *dictionary = new FeatureDictionary(vocabulary);
+		string videoFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/";
+		//string videoFileDir = "C:/Users/Christian/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/Assignment2/training";
+		ArgumentPath(argc, argv, 2, videoFileDir);
 	
-	// build feature representation of every video in the trainingset
-	//vector<Mat> *histograms = new vector<Mat>();
-	//vector<string> *classifications = new vector<string>();
-	vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(*videoContainers, *dictionary);//, *histograms, *classifications);
+		vector<string> videoFileNames = getFilesPathWithinFolder(videoFileDir);
 
-	map<int, string> *hashClassificationMap = new map<int, string>();
-	CvRTrees *classifier = TrainClassifier(*videoMetaDataSet, *hashClassificationMap);
+		if (videoFileNames.size() == 0)
+		{
+			cout << "No training video files found.";
+			return -1;
+		}
 
-	//string videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
-	//ArgumentPath(argc, argv, 2, videoTestFileDir);
-	//vector<string> videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
+		videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
+		ArgumentPath(argc, argv, 3, videoTestFileDir);
+		videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
 
-	vector<VideoContainer *> *videoTestContainers = new vector<VideoContainer *>();
-	for(int i=0; i<videoTestFileNames.size(); i++)
-	{
-		vector<string> tokens = splitString(videoTestFileNames[i], "/");
-		string classification = tokens[tokens.size()-1];
+		if (videoTestFileNames.size() == 0)
+		{
+			cout << "No test video files found.";
+			return -1;
+		}
 
-		VideoContainer *videoContainer = new VideoContainer(videoTestFileNames[i], classification);
-		videoTestContainers->push_back(videoContainer);
+		vector<VideoContainer *> *videoContainers = new vector<VideoContainer *>();
+		for(int i=0; i<videoFileNames.size(); i++)
+		{
+			vector<string> tokens = splitString(videoFileNames[i], "/");
+			string classification = tokens[tokens.size()-1];
+
+			VideoContainer *videoContainer = new VideoContainer(videoFileNames[i], classification);
+			videoContainers->push_back(videoContainer);
+		}
+
+		// ------------------------------------------------
+		// Learning phase
+		// ------------------------------------------------
+		// apply feature extraction on all collected frames
+
+		Mat *vocabulary = BuildVocabulary(*videoContainers);
+
+		// save vocabulary
+		string vocabularyDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		ArgumentPath(argc, argv, 4, vocabularyDir);
+		string vocabularyFileName = vocabularyDir + "Vocalulary";
+		imwrite( "vocabularyFileName", *vocabulary );
+
+		dictionary = new FeatureDictionary(vocabulary);
+	
+		// build feature representation of every video in the trainingset
+		vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(*videoContainers, *dictionary);
+
+		map<int, string> *hashClassificationMap = new map<int, string>();
+		classifier = TrainClassifier(*videoMetaDataSet, *hashClassificationMap);
+
+		string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		ArgumentPath(argc, argv, 5, classifierDir);
+		string classifierFileName = classifierDir + "CvRTrees";
+		classifier->save(classifierFileName.c_str());
 	}
 
-	ConfusionMatrix *confusionMatrix = ClassifyVideos(*videoTestContainers, *dictionary, *classifier);
+	// ======================================================================================================
 
-	// print out Precision and Sensitifity for all classes
-	PrintConfusionMatrix(*confusionMatrix);
+	if (strcmp(mode.c_str(),"CLASSIFY") == 0)
+	{
+		// load vocabulary
+		string vocabularyDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		ArgumentPath(argc, argv, 2, vocabularyDir);
+		string vocabularyFileName = vocabularyDir + "Vocalulary";
+		Mat voc = imread( "vocabularyFileName");
 
-	int j=0;
+		if (voc.empty())
+		{
+			cout << "No vocabulary found.";
+			return -1;
+		}
 
-	// ==============
+		vocabulary = new Mat(voc.size(), voc.type());
+		voc.copyTo(*vocabulary);
 
+		// load classifier
+		string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		ArgumentPath(argc, argv, 3, classifierDir);
+		string classifierFileName = classifierDir + "CvRTrees";
+		classifier = new CvRTrees();
+		classifier->load(classifierFileName.c_str());
+		// TODO: verification missing
+
+		// load test file dir
+		videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
+		ArgumentPath(argc, argv, 4, videoTestFileDir);
+		videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
+
+		if (videoTestFileNames.size() == 0)
+		{
+			cout << "No test video files found.";
+			return -1;
+		}
+	}
+	
+	// ======================================================================================================
+
+	if (strcmp(mode.c_str(),"ALL") == 0 ||strcmp(mode.c_str(),"CLASSIFY") == 0)
+	{
+		vector<VideoContainer *> *videoTestContainers = new vector<VideoContainer *>();
+		for(int i=0; i<videoTestFileNames.size(); i++)
+		{
+			vector<string> tokens = splitString(videoTestFileNames[i], "/");
+			string classification = tokens[tokens.size()-1];
+
+			VideoContainer *videoContainer = new VideoContainer(videoTestFileNames[i], classification);
+			videoTestContainers->push_back(videoContainer);
+		}
+
+		ConfusionMatrix *confusionMatrix = ClassifyVideos(*videoTestContainers, *dictionary, *classifier);
+
+		// print out Precision and Sensitifity for all classes
+		PrintConfusionMatrix(*confusionMatrix);
+	}
+	
+	// ======================================================================================================
 }
 

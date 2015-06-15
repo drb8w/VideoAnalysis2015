@@ -1,6 +1,12 @@
 #include "FeatureHelpers.h"
 
 #include "stdafx.h"
+//#define NFEATURES 100
+#define NFEATURES 50
+
+//#define NUMCLUSTERS 480 // 50*50 from CompVis or 480 from paper
+#define NUMCLUSTERS 240
+
 #include <stdio.h>
 #include <list>
 #include <cmath>
@@ -14,7 +20,7 @@
 using namespace cv;
 using namespace std;
 
-vector<Mat> *ExtractFeatures(vector<Mat> &frames, int nfeatures = 100)
+vector<Mat> *ExtractFeatures(vector<Mat> &frames, int nfeatures = NFEATURES)
 {
 	// apply feature extraction on all collected frames
 	vector<Mat> *descriptorsList = new vector<Mat>();
@@ -38,7 +44,7 @@ vector<Mat> *ExtractFeatures(vector<Mat> &frames, int nfeatures = 100)
 	return descriptorsList;
 }
 
-vector<Mat *> *ExtractFeaturePtrs(vector<Mat *> &frames, int nfeatures = 100)
+vector<Mat *> *ExtractFeaturePtrs(vector<Mat *> &frames, int nfeatures = NFEATURES)
 {
 	// apply feature extraction on all collected frames
 	vector<Mat *> *descriptorsList = new vector<Mat *>();
@@ -92,7 +98,6 @@ Mat *AppendFeatures(vector<Mat> &features)
 	return featureMat;
 }
 
-
 Mat *AppendFeaturePtrs(vector<Mat *> &features)
 {
 	// create new Mat
@@ -123,8 +128,7 @@ Mat *AppendFeaturePtrs(vector<Mat *> &features)
 	return featureMat;
 }
 
-
-Mat *ClusterFeatures(vector<Mat> &features, int numClusters = 500) // 50*50 from CompVis or 480 from paper
+Mat *ClusterFeatures(vector<Mat> &features, int numClusters = NUMCLUSTERS) // 50*50 from CompVis or 480 from paper
 {
 	// create new Mat
 	int rows = features[0].rows;
@@ -163,7 +167,7 @@ Mat *ClusterFeatures(vector<Mat> &features, int numClusters = 500) // 50*50 from
 	return clusters;
 }
 
-Mat *ClusterFeaturePtrs(vector<Mat *> &features, int numClusters = 500) // 50*50 from CompVis or 480 from paper
+Mat *ClusterFeaturePtrs(vector<Mat *> &features, int numClusters = NUMCLUSTERS) // 50*50 from CompVis or 480 from paper
 {
 	// create new Mat
 	int rows = features[0]->rows;

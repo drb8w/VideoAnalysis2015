@@ -30,6 +30,14 @@ char *replace(char *st, char *orig, char *repl)
   return buffer;
 }
 
+std::string ArgumentString(int argc, char *argv[], int argNo, std::string &str)
+{
+	if (argc >argNo)
+		str = argv[argNo];
+
+	return str;
+}
+
 std::string ArgumentPath(int argc, char *argv[], int argNo, std::string &path)
 {
 	if (argc >argNo)

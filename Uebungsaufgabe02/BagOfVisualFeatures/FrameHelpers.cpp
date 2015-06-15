@@ -36,11 +36,11 @@ void convertToGrayscale(const Mat &img, Mat &imgGray)
 }
 #endif
 
-vector<Mat> *convertToGrayscales(vector<Mat> *rgbFrames, vector<Mat> *grayFrames)
+vector<Mat> *convertToGrayscales(vector<Mat> &rgbFrames, vector<Mat> *grayFrames)
 {
-	for(int i=0; i < rgbFrames->size(); i++)
+	for(int i=0; i < rgbFrames.size(); i++)
 	{
-		Mat imgRGB_i = (*rgbFrames)[i];
+		Mat imgRGB_i = rgbFrames[i];
 		Mat imgGray_i(imgRGB_i.rows,imgRGB_i.cols, CV_8U);
 		convertToGrayscale(imgRGB_i, imgGray_i);
 		grayFrames->push_back(imgGray_i);
@@ -49,12 +49,11 @@ vector<Mat> *convertToGrayscales(vector<Mat> *rgbFrames, vector<Mat> *grayFrames
 	return grayFrames;
 }
 
-vector<Mat> *convertToGrayscales(vector<Mat> *rgbFrames)
+vector<Mat> *convertToGrayscales(vector<Mat> &rgbFrames)
 {
 	vector<Mat> *grayFrames = new vector<Mat>();
 	return convertToGrayscales(rgbFrames, grayFrames);
 }
-
 
 vector<Mat *> *convertToGrayscalePtrs(vector<Mat *> &rgbFrames, vector<Mat *> &grayFrames)
 {
