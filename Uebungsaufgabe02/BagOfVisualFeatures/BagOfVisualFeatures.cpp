@@ -349,14 +349,17 @@ int main(int argc, char *argv[])
 			return -1;
 		}
 
-		videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
-		ArgumentPath(argc, argv, 3, videoTestFileDir);
-		videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
-
-		if (videoTestFileNames.size() == 0)
+		if (strcmp(mode.c_str(),"FULL") == 0)
 		{
-			cout << "No test video files found.";
-			return -1;
+			videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
+			ArgumentPath(argc, argv, 3, videoTestFileDir);
+			videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
+
+			if (videoTestFileNames.size() == 0)
+			{
+				cout << "No test video files found.";
+				return -1;
+			}
 		}
 
 		vector<VideoContainer *> *videoContainers = new vector<VideoContainer *>();
