@@ -124,6 +124,7 @@ Mat *BuildVocabulary(vector<Mat> &trainingFrames)
 
 Mat *BuildVocabulary(vector<VideoContainer *> &videoContainers)
 {
+	cout << "Start: BuildVocabulary \n";
 #ifdef USEFRAMEPTRS
 	vector<Mat *> *fullFeatures = new vector<Mat *>();
 #else
@@ -134,7 +135,7 @@ Mat *BuildVocabulary(vector<VideoContainer *> &videoContainers)
 		VideoContainer *videoContainer = videoContainers[i];
 
 		// TEST
-		cout << "video " + videoContainer->getVideoFileName() + ": ExtractFeatures \n";
+		cout << "video " + videoContainer->getVideoFileName() + " \n";
 
 #ifdef USEFRAMEPTRS
 		vector<Mat *> *trainingFrames = videoContainer->getSpatialTemporalFramePtrs();
@@ -149,25 +150,29 @@ Mat *BuildVocabulary(vector<VideoContainer *> &videoContainers)
 
 		//PrintMemoryUsage();
 
+		cout << "create fullFeatures \n";
 #ifdef USEFRAMEPTRS
 		for(int j=0; j<features->size(); j++)
-			fullFeatures->push_back((*features)[i]);
+			if ((*features)[j] != NULL && !(*features)[j]->empty() )
+				fullFeatures->push_back((*features)[j]);
 #else
 		for(int j=0; j<features->size(); j++)
-			fullFeatures->push_back((*features)[i].clone());
+			if (!(*features)[j].empty())
+				fullFeatures->push_back((*features)[j].clone());
 #endif
-
+		cout << "clear features \n";
 		features->clear();
 		delete features;
 	}
 	// TEST
-	cout << "ClusterFeatures \n";
+	//cout << "ClusterFeatures \n";
 
 #ifdef USEFRAMEPTRS
 	Mat *featureClusters = ClusterFeaturePtrs(*fullFeatures);
 #else
 	Mat *featureClusters = ClusterFeatures(*fullFeatures);
 #endif
+	cout << "End: BuildVocabulary \n";
 	return featureClusters;
 }
 

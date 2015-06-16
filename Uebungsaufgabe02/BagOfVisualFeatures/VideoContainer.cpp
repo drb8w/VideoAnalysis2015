@@ -1,4 +1,5 @@
-//#define ONLYSPACIALFRAMES
+#define ONLYSPACIALFRAMES
+//#define TESTWRITE
 
 #include "stdafx.h"
 //#include <stdio.h>
@@ -10,6 +11,7 @@
 
 #include "VideoContainer.h"
 #include "VideoHelpers.h"
+#include "FrameHelpers.h"
 
 using namespace cv;
 using namespace std; 
@@ -38,8 +40,10 @@ VideoContainer::VideoContainer(string videoFileName, string classification, bool
 	#endif
 #else
 	#ifdef ONLYSPACIALFRAMES
-		this->m_spatialTemporalFrames = GetFramesCPP(videoFileName);
-		//this->m_spatialTemporalFrames = GetFrames(videoFileName);
+		//vector<Mat> *frames = GetFrames(videoFileName);
+		vector<Mat> *frames = GetFramesCPP(videoFileName);
+		vector<Mat> *grayFrames = convertToGrayscales(*frames);
+		this->m_spatialTemporalFrames = grayFrames;
 	#else
 		this->m_videoFrames = GetFramesCPP(videoFileName);
 		//this->m_videoFrames = GetFrames(videoFileName);
@@ -136,11 +140,14 @@ vector<Mat> *VideoContainer::getFrames()
 
 vector<Mat> *VideoContainer::getSpatialTemporalFrames()
 {
+	cout << "Start: getSpatialTemporalFrames \n";
 	if (this->m_lazy && this->m_spatialTemporalFrames == NULL)
 	{
 	#ifdef ONLYSPACIALFRAMES
 		// read frames once
-		this->m_spatialTemporalFrames = getFrames();
+		vector<Mat> *frames = getFrames();
+		vector<Mat> *grayFrames = convertToGrayscales(*frames);
+		this->m_spatialTemporalFrames = grayFrames;
 	#else
 		// read frames once
 		this->m_videoFrames = getFrames();
@@ -156,11 +163,29 @@ vector<Mat> *VideoContainer::getSpatialTemporalFrames()
 		this->m_spatialTemporalFrames = GetSpatialTemporalFrames(*(this->m_videoFrames));
 	#endif
 	}
+
+#ifdef TESTWRITE
+	for(int i=0; i<this->m_spatialTemporalFrames->size(); i++)
+	{
+		stringstream ss;
+		ss << i;
+		string str = ss.str();
+
+		//string impFileName = "C:/" + this->getVideoFileName() + str + ".png";
+		string impFileName = "C:/test.png";
+		Mat mat = (*(this->m_spatialTemporalFrames))[i];
+		imwrite(impFileName, (*(this->m_spatialTemporalFrames))[i]);
+
+		int x=0;
+	}
+#endif
+	cout << "End: getSpatialTemporalFrames \n";
 	return this->m_spatialTemporalFrames;
 }
 
 void VideoContainer::release()
 {
+	cout << "Start: release \n";
 	if (this->m_lazy)
 	{
 		if (this->m_videoFrames != NULL)
@@ -183,6 +208,7 @@ void VideoContainer::release()
 			this->m_spatialTemporalFrames = NULL;
 		}
 	}
+	cout << "End: release \n";
 }
 
 
