@@ -3,6 +3,13 @@
 
 //#include "stdafx.h"
 
+#include <iostream>
+#include <Windows.h>
+
+#include <locale>
+#include <string>
+#include <sstream>
+
 using namespace std;
 
 vector<string> splitString(string s, string delimiter)
@@ -38,6 +45,45 @@ std::string ArgumentString(int argc, char *argv[], int argNo, std::string &str)
 	return str;
 }
 
+
+wstring widen( const string& str )
+{
+    wostringstream wstm ;
+    const ctype<wchar_t>& ctfacet = 
+                        use_facet< ctype<wchar_t> >( wstm.getloc() ) ;
+    for( size_t i=0 ; i<str.size() ; ++i ) 
+              wstm << ctfacet.widen( str[i] ) ;
+    return wstm.str() ;
+}
+string narrow( const wstring& str )
+{
+    ostringstream stm ;
+    const ctype<char>& ctfacet = 
+                         use_facet< ctype<char> >( stm.getloc() ) ;
+    for( size_t i=0 ; i<str.size() ; ++i ) 
+                  stm << ctfacet.narrow( str[i], 0 ) ;
+    return stm.str() ;
+}
+
+
+std::string ExecutionPath()
+{
+	wchar_t buffer[MAX_PATH]; 
+	GetModuleFileName(NULL, buffer, MAX_PATH);
+
+	// convert to string
+	string execPath = narrow(buffer);
+
+	for (int i=0; i<100; i++)
+		execPath = replace((char *)(execPath.c_str()), "\\", "/");
+
+	// find last slash
+	std::size_t found = execPath.find_last_of("/");
+	execPath = execPath.substr(0,found+1);
+
+	return execPath;
+}
+
 std::string ArgumentPath(int argc, char *argv[], int argNo, std::string &path)
 {
 	if (argc >argNo)
@@ -48,6 +94,14 @@ std::string ArgumentPath(int argc, char *argv[], int argNo, std::string &path)
 
 	if (strcmp((const char *)&(path[path.size()-1]),"/"))
 		path = path + "/";
+
+	if (path[0] =='.')
+	{
+		// convert to string
+		string execPath = ExecutionPath();		
+		// concat right parts
+		path = execPath + path.substr(2,path.size()-2);
+	}
 
 	return path;
 }

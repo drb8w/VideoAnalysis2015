@@ -304,8 +304,9 @@ int main(int argc, char *argv[])
 	
 	if (strcmp(mode.c_str(),"FULL") == 0 || strcmp(mode.c_str(),"TRAIN") == 0 )
 	{
-		string videoFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/";
+		//string videoFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/training/";
 		//string videoFileDir = "C:/Users/Christian/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/Assignment2/training";
+		string videoFileDir = "./training/";
 		ArgumentPath(argc, argv, 2, videoFileDir);
 	
 		vector<string> videoFileNames = getFilesPathWithinFolder(videoFileDir);
@@ -318,7 +319,8 @@ int main(int argc, char *argv[])
 
 		if (strcmp(mode.c_str(),"FULL") == 0)
 		{
-			videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
+			//videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
+			videoTestFileDir = "./test/";
 			ArgumentPath(argc, argv, 3, videoTestFileDir);
 			videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
 
@@ -347,7 +349,8 @@ int main(int argc, char *argv[])
 		Mat *vocabulary = BuildVocabulary(*videoContainers);
 
 		// save vocabulary
-		string vocabularyDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		//string vocabularyDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		string vocabularyDir = "./";
 		ArgumentPath(argc, argv, 4, vocabularyDir);
 		string vocabularyFileName = vocabularyDir + "Vocalulary.yml";
 
@@ -363,7 +366,8 @@ int main(int argc, char *argv[])
 		map<int, string> *hashClassificationMap = new map<int, string>();
 		classifier = TrainClassifier(*videoMetaDataSet, *hashClassificationMap);
 
-		string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		//string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		string classifierDir = "./";
 		ArgumentPath(argc, argv, 5, classifierDir);
 		string classifierFileName = classifierDir + "CvRTrees";
 		classifier->save(classifierFileName.c_str());
@@ -374,7 +378,8 @@ int main(int argc, char *argv[])
 	if (strcmp(mode.c_str(),"CLASSIFY") == 0)
 	{
 		// load vocabulary
-		string vocabularyDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		//string vocabularyDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		string vocabularyDir = "./";
 		ArgumentPath(argc, argv, 2, vocabularyDir);
 		string vocabularyFileName = vocabularyDir + "Vocalulary.yml";
 
@@ -393,7 +398,8 @@ int main(int argc, char *argv[])
 		dictionary = new FeatureDictionary(vocabulary);
 
 		// load classifier
-		string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		//string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		string classifierDir = "./";
 		ArgumentPath(argc, argv, 3, classifierDir);
 		string classifierFileName = classifierDir + "CvRTrees";
 		classifier = new CvRTrees();
@@ -401,7 +407,8 @@ int main(int argc, char *argv[])
 		// TODO: verification missing
 
 		// load test file dir
-		videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
+		//videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
+		videoTestFileDir = "./test/";
 		ArgumentPath(argc, argv, 4, videoTestFileDir);
 		videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
 
