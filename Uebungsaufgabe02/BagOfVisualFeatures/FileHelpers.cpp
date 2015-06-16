@@ -72,7 +72,7 @@ vector<string> getFilesPathWithinFolder(string folder, bool recursive, string ex
 				if (strcmp(extension.c_str(),"") != 0 ){
 					string destStr(dest);
 					size_t iIndex = destStr.rfind(extension);
-					if (iIndex < 0)
+					if (iIndex < 0 || iIndex > destStr.size() )
 						append = false;
 				} 
 				if (append)
