@@ -31,6 +31,10 @@ public:
 	float TrueNegatives(Classification &classification);
 	float FalseNegatives(Classification &classification);
 
+	std::string ToString();
+
 };
+
+void PrintConfusionMatrix(ConfusionMatrix &confusionMatrix);
 
 #endif

@@ -101,4 +101,56 @@ float ConfusionMatrix::FalseNegatives(Classification &classification)
 	return fn;
 }
 
+string ConfusionMatrix::ToString()
+{
+	string str = "ConfusionMatrix: \n";
+
+	vector<Classification *> classifications = *(this->getClassifications());
+
+	for(int i=0; i<classifications.size(); i++)
+	{
+		str += classifications[i]->getName() + "\n";
+		int * confusionRow = this->m_confusionMatrix[i];
+		for(int j=0; j<classifications.size(); j++)
+		{
+			stringstream ss;
+			ss << confusionRow[j];
+			string iStr = ss.str();
+			str += iStr + " ";	
+		}
+		str += "\n";
+	}
+	return str;
+}
+
+
+void PrintConfusionMatrix(ConfusionMatrix &confusionMatrix)
+{
+	cout << confusionMatrix.ToString();
+
+	// print out Precision and Sensitifity for all classes
+	vector<Classification *> *classifications = confusionMatrix.getClassifications();
+	
+	for(int i=0; i<classifications->size(); i++)
+	{
+		Classification *classification = (*classifications)[i];
+
+		string classStr = "Classification: " + classification->getName() + "\n";
+		cout << classStr;
+
+		std::ostringstream ss;
+		ss << confusionMatrix.Precision(*classification);
+		std::string precStr(ss.str());
+		precStr = "Percision: " + precStr  + "\n";
+
+		cout << precStr;
+
+		std::ostringstream ss2;
+		ss2 << confusionMatrix.Sensitivity(*classification);
+		std::string sensStr(ss.str());
+		sensStr = "Sinsitivity: " + sensStr  + "\n";
+
+		cout << sensStr;
+	}
+}
 

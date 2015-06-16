@@ -288,34 +288,6 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 	return confusionMatrix;
 }
 
-void PrintConfusionMatrix(ConfusionMatrix &confusionMatrix)
-{
-	// print out Precision and Sensitifity for all classes
-	vector<Classification *> *classifications = confusionMatrix.getClassifications();
-	for(int i=0; i<classifications->size(); i++)
-	{
-		Classification *classification = (*classifications)[i];
-
-		string classStr = "Classification: " + classification->getName() + "\n";
-		cout << classStr;
-
-		std::ostringstream ss;
-		ss << confusionMatrix.Precision(*classification);
-		std::string precStr(ss.str());
-		precStr = "Percision: " + precStr  + "\n";
-
-		cout << precStr;
-
-		std::ostringstream ss2;
-		ss2 << confusionMatrix.Sensitivity(*classification);
-		std::string sensStr(ss.str());
-		sensStr = "Sinsitivity: " + sensStr  + "\n";
-
-		cout << sensStr;
-	}
-}
-
-
 int main(int argc, char *argv[])
 {
 	string mode = "FULL";
