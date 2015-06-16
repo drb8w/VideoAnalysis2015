@@ -36,6 +36,7 @@ vector<Mat> *GetFramesCPP(string videoFileName, vector<Mat> *videoFrames, int fr
 		//// TEST
 		//namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
 		//imshow( "Display window", frame);  
+		//imwrite("C:\\test.png",frame);
 		
 		frameCtr++;
 		if (frameCtr % frameModulo == 0)

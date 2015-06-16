@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
 		string videoFileDir = "./training/";
 		ArgumentPath(argc, argv, 2, videoFileDir);
 	
-		vector<string> videoFileNames = getFilesPathWithinFolder(videoFileDir);
+		vector<string> videoFileNames = getFilesPathWithinFolder(videoFileDir, true, ".avi");
 
 		if (videoFileNames.size() == 0)
 		{
@@ -322,7 +322,7 @@ int main(int argc, char *argv[])
 			//videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
 			videoTestFileDir = "./test/";
 			ArgumentPath(argc, argv, 3, videoTestFileDir);
-			videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
+			videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir, true, ".avi");
 
 			if (videoTestFileNames.size() == 0)
 			{
@@ -410,7 +410,7 @@ int main(int argc, char *argv[])
 		//videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
 		videoTestFileDir = "./test/";
 		ArgumentPath(argc, argv, 4, videoTestFileDir);
-		videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir);
+		videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir, true, ".avi");
 
 		if (videoTestFileNames.size() == 0)
 		{

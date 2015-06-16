@@ -38,10 +38,11 @@ VideoContainer::VideoContainer(string videoFileName, string classification, bool
 	#endif
 #else
 	#ifdef ONLYSPACIALFRAMES
-			this->m_spatialTemporalFrames = GetFrames(videoFileName);
+		this->m_spatialTemporalFrames = GetFramesCPP(videoFileName);
+		//this->m_spatialTemporalFrames = GetFrames(videoFileName);
 	#else
-		//this->m_videoFrames = GetFramesCPP(videoFileName);
-		this->m_videoFrames = GetFrames(videoFileName);
+		this->m_videoFrames = GetFramesCPP(videoFileName);
+		//this->m_videoFrames = GetFrames(videoFileName);
 
 		//// TEST
 		//for (int i=0; i<this->m_videoFrames->size(); i++)
@@ -127,8 +128,8 @@ vector<Mat> *VideoContainer::getFrames()
 	if (this->m_lazy && this->m_videoFrames == NULL)
 	{
 		// read frames once
-		//this->m_videoFrames = GetFramesCPP(this->m_videoFileName);
-		this->m_videoFrames = GetFrames(this->m_videoFileName);
+		this->m_videoFrames = GetFramesCPP(this->m_videoFileName);
+		//this->m_videoFrames = GetFrames(this->m_videoFileName);
 	}
 	return this->m_videoFrames;
 }

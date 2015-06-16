@@ -51,7 +51,7 @@ vector<string> get_all_files_names_within_folder(string folder)
     return names;
 }
 
-vector<string> getFilesPathWithinFolder(string folder, bool recursive)
+vector<string> getFilesPathWithinFolder(string folder, bool recursive, string extension)
 {
     vector<string> names;
     char search_path[200];
@@ -67,8 +67,19 @@ vector<string> getFilesPathWithinFolder(string folder, bool recursive)
 			{
 				CHAR dest[MAX_PATH];
 				std::transform(fd.cFileName, fd.cFileName + MAX_PATH, dest, wide_to_narrow);
-				string fileName = folder + dest;
-                names.push_back(fileName);
+
+				bool append = true;
+				if (strcmp(extension.c_str(),"") != 0 ){
+					string destStr(dest);
+					size_t iIndex = destStr.rfind(extension);
+					if (iIndex < 0)
+						append = false;
+				} 
+				if (append)
+				{
+					string fileName = folder + dest;
+					names.push_back(fileName);
+				}
             }
 			else if (recursive)
 			{
@@ -78,7 +89,7 @@ vector<string> getFilesPathWithinFolder(string folder, bool recursive)
 				{
 					string subFolder = folder + dest + "/";
 					// recursive call
-					vector<string> subNames = getFilesPathWithinFolder(subFolder, recursive);
+					vector<string> subNames = getFilesPathWithinFolder(subFolder, recursive, extension);
 					names.insert(names.end(), subNames.begin(), subNames.end());
 				}
 			}
