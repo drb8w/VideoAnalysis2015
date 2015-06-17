@@ -267,12 +267,14 @@ CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, st
 	// ===================================================
 
 	// Copy Data
-	Mat trainingClassification(videoMetaDataSet.size(),1, CV_32FC1);
+	//Mat trainingClassification(videoMetaDataSet.size(),1, CV_32FC1);
+	Mat trainingClassification(videoMetaDataSet.size(),1, CV_32SC1);
 	for(int j=0; j<videoMetaDataSet.size(); j++)
 	{
 		int hash = videoMetaDataSet[j]->getClassification()->getHash();
 		hashClassificationMap[hash] = videoMetaDataSet[j]->getClassification()->getName();
-		trainingClassification.at<float>(j,0) = hash;
+		//trainingClassification.at<float>(j,0) = hash;
+		trainingClassification.at<int>(j,0) = hash;
 	}
 	rtree->train(trainingData, CV_ROW_SAMPLE, trainingClassification,
 				cv::Mat(), cv::Mat(), cv::Mat(), cv::Mat(), params);
