@@ -178,7 +178,7 @@ Mat *BuildVocabulary(vector<VideoContainer *> &videoContainers)
 
 vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary)//, vector<Mat> &histograms, vector<string> &classifications)
 {
-	cout << "Start: BuildVideoMetaData";
+	cout << "Start: BuildVideoMetaData \n";
 	// output featurepoints and labels for videos
 	vector<VideoMetaData *> *videoMetaDataSet = new vector<VideoMetaData *>();
 
@@ -237,13 +237,13 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 		videoMetaDataSet->push_back(videoMetaData);
 	}
 
-	cout << "End: BuildVideoMetaData";
+	cout << "End: BuildVideoMetaData \n";
 	return videoMetaDataSet;
 }
 
 CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, string> &hashClassificationMap)
 {
-	cout << "Start: TrainClassifier";
+	cout << "Start: TrainClassifier \n";
 	CvRTParams params;
 	CvRTrees *rtree = new CvRTrees();
 
@@ -276,13 +276,13 @@ CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, st
 	rtree->train(trainingData, CV_ROW_SAMPLE, trainingClassification,
 				cv::Mat(), cv::Mat(), cv::Mat(), cv::Mat(), params);
 
-	cout << "End: TrainClassifier";
+	cout << "End: TrainClassifier \n";
 	return rtree;
 }
 
 ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, CvRTrees &rTreeClassifier)
 {
-	cout << "Start: ClassifyVideos";
+	cout << "Start: ClassifyVideos \n";
 
 	// generate ConfusionMatrix that shows how often a classification of the videoContainers is hit by the learning algorithm
 
@@ -299,7 +299,7 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 
 		confusionMatrix->add(hash, classification);
 	}
-	cout << "End: ClassifyVideos";
+	cout << "End: ClassifyVideos \n";
 	return confusionMatrix;
 }
 
