@@ -469,7 +469,7 @@ int main(int argc, char *argv[])
 		//string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
 		string classifierDir = "./";
 		ArgumentPath(argc, argv, 6, classifierDir);
-		string classifierFileName = classifierDir + "CvRTrees";
+		string classifierFileName = classifierDir + "Classifier";
 		classifier->save(classifierFileName.c_str());
 	}
 
@@ -501,7 +501,7 @@ int main(int argc, char *argv[])
 		//string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
 		string classifierDir = "./";
 		ArgumentPath(argc, argv, 3, classifierDir);
-		string classifierFileName = classifierDir + "CvRTrees";
+		string classifierFileName = classifierDir + "Classifier";
 		classifier = new CvRTrees();
 		classifier->load(classifierFileName.c_str());
 		// TODO: verification missing
