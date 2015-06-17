@@ -1,6 +1,9 @@
 //#define USEFRAMEPTRS
+#define SVM
 
 #include "stdafx.h"
+
+#include "BagOfVisualFeatures.h"
 
 #include "windows.h"
 #include "psapi.h"
@@ -242,11 +245,19 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 	return videoMetaDataSet;
 }
 
-CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, string> &hashClassificationMap)
+//CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, string> &hashClassificationMap)
+CvStatModel *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, string> &hashClassificationMap)
 {
 	cout << "Start: TrainClassifier \n";
+	
+#ifdef TREE
 	CvRTParams params;
-	CvRTrees *rtree = new CvRTrees();
+	CvRTrees *classifier = new CvRTrees();
+#endif
+#ifdef SVM
+	CvSVMParams params;
+	CvSVM *classifier = new CvSVM();
+#endif
 
 	// assemble trainingData out of histogram-entries of videoMetaDataSet
 	
@@ -276,19 +287,28 @@ CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, st
 		//trainingClassification.at<float>(j,0) = hash;
 		trainingClassification.at<int>(j,0) = hash;
 	}
-	rtree->train(trainingData, CV_ROW_SAMPLE, trainingClassification,
+#ifdef TREE
+	classifier->train(trainingData, CV_ROW_SAMPLE, trainingClassification,
 				cv::Mat(), cv::Mat(), cv::Mat(), cv::Mat(), params);
-
+#endif
+#ifdef SVM
+	classifier->train(trainingData, trainingClassification, Mat(), Mat(), params );
+#endif
 	cout << "End: TrainClassifier \n";
-	return rtree;
+	return classifier;
 }
 
-ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, CvRTrees &rTreeClassifier)
+//ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, CvStatModel &classifier)
+ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, CvStatModel *classifier)
 {
 	cout << "Start: ClassifyVideos \n";
-
+#ifdef TREE
+	CvRTrees *classifierPtr = (CvRTrees *)(classifier);
+#endif
+#ifdef SVM
+	CvSVM *classifierPtr = (CvSVM *)(classifier);
+#endif
 	// generate ConfusionMatrix that shows how often a classification of the videoContainers is hit by the learning algorithm
-
 	vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(videoContainers, dictionary);
 
 	//Mat ConfusionMatrix(,,CV_32FC1);
@@ -297,7 +317,8 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 	for(int i=0; i<videoMetaDataSet->size(); i++)
 	{
 		Mat *histogram = (*videoMetaDataSet)[i]->getHistogram();
-		int classification = (int)rTreeClassifier.predict(*histogram);
+		//int classification = (int)classifier.predict(*histogram);
+		int classification = (int)classifierPtr->predict(*histogram);
 		int hash = (*videoMetaDataSet)[i]->getClassification()->getHash();
 
 		confusionMatrix->add(hash, classification);
@@ -313,7 +334,8 @@ int main(int argc, char *argv[])
 
 	Mat *vocabulary = NULL;
 	FeatureDictionary *dictionary = NULL;
-	CvRTrees *classifier = NULL;
+	//CvRTrees *classifier = NULL;
+	CvStatModel *classifier = NULL;
 
 	string videoTestFileDir = "";
 	vector<string> videoTestFileNames;
@@ -540,7 +562,7 @@ int main(int argc, char *argv[])
 			videoTestContainers->push_back(videoContainer);
 		}
 
-		ConfusionMatrix *confusionMatrix = ClassifyVideos(*videoTestContainers, *dictionary, *classifier);
+		ConfusionMatrix *confusionMatrix = ClassifyVideos(*videoTestContainers, *dictionary, classifier);
 
 		// print out Precision and Sensitifity for all classes
 		PrintConfusionMatrix(*confusionMatrix);
