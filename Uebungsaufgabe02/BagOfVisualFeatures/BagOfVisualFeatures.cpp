@@ -392,7 +392,7 @@ int main(int argc, char *argv[])
 
 		string videoMetaDataSetDir = "./";
 		ArgumentPath(argc, argv, 5, videoMetaDataSetDir);
-		string videoMetaDataSetFileName = "VideoMetaDataSet.yml";
+		string videoMetaDataSetFileName = videoMetaDataSetDir + "VideoMetaDataSet.yml";
 
 		FileStorage fs2(videoMetaDataSetFileName, FileStorage::WRITE);
 		fs2 << "videMetaDataSet" << "[" ;
