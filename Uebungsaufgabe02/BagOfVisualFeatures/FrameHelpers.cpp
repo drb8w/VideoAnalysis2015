@@ -73,3 +73,10 @@ vector<Mat *> *convertToGrayscalePtrs(vector<Mat *> &rgbFrames)
 	vector<Mat *> *grayFrames = new vector<Mat *>();
 	return convertToGrayscalePtrs(rgbFrames, *grayFrames);
 }
+
+void cleanMatF32(Mat &mat)
+{
+	for(int i=0; i<mat.rows; i++)
+		for(int j=0; j<mat.cols; j++)
+			mat.at<float>(i,j) = 0;	
+}

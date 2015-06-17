@@ -187,6 +187,7 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 	for (int i=0; i<videoContainers.size(); i++)
 	{
 		Mat *histogram = new Mat(1, historamBins, CV_32F);
+		cleanMatF32(*histogram);
 
 		VideoContainer *videoContainer = videoContainers[i];
 
