@@ -9,6 +9,9 @@
 #include "psapi.h"
 #include<tchar.h>
 
+#include <iostream>
+#include <fstream>
+
 #include <stdio.h>
 #include <list>
 #include <vector>
@@ -237,7 +240,7 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 			histogram->at<float>(0,histBin) = histogram->at<float>(0,histBin)/collectedFeatures->rows;
 
 		// create video meta data
-		VideoMetaData *videoMetaData = new VideoMetaData(histogram, videoContainer->getClassification());
+		VideoMetaData *videoMetaData = new VideoMetaData(histogram, videoContainer->getClassification(), videoContainer->getVideoFileName());
 		videoMetaDataSet->push_back(videoMetaData);
 	}
 
@@ -298,8 +301,7 @@ CvStatModel *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int,
 	return classifier;
 }
 
-//ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, CvStatModel &classifier)
-ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, CvStatModel *classifier)
+ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, CvStatModel *classifier, map<int, string> *hashClassificationMap, vector<string> &fileClassList)
 {
 	cout << "Start: ClassifyVideos \n";
 #ifdef TREE
@@ -311,6 +313,9 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 	// generate ConfusionMatrix that shows how often a classification of the videoContainers is hit by the learning algorithm
 	vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(videoContainers, dictionary);
 
+	if (hashClassificationMap == NULL)
+		hashClassificationMap = GetHashClassificationMap(*videoMetaDataSet);
+
 	//Mat ConfusionMatrix(,,CV_32FC1);
 	ConfusionMatrix *confusionMatrix = new ConfusionMatrix(*GetUniqueVideoMetaDataClassifications(*videoMetaDataSet));
 
@@ -319,23 +324,60 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 		Mat *histogram = (*videoMetaDataSet)[i]->getHistogram();
 		//int classification = (int)classifier.predict(*histogram);
 		int classification = (int)classifierPtr->predict(*histogram);
-		int hash = (*videoMetaDataSet)[i]->getClassification()->getHash();
+		
+		try{
+			// try to find in map
+			string classificationStr = (*hashClassificationMap)[classification];
 
-		confusionMatrix->add(hash, classification);
+			if (strcmp(classificationStr.c_str(),"") == 0 )
+				classificationStr = "NO CLASS";
+		
+			string outputStr = (*videoMetaDataSet)[i]->getVideoFileName()+"\t"+classificationStr+"\n";
+			fileClassList.push_back(outputStr);
+
+			int hash = (*videoMetaDataSet)[i]->getClassification()->getHash();
+			confusionMatrix->add(hash, classification);
+		}
+		catch(Exception ex)
+		{
+
+		}
 	}
 	cout << "End: ClassifyVideos \n";
 	return confusionMatrix;
 }
 
+map<int, string> * GetHashClassificationMap(vector<VideoMetaData *> &videoMetaDataSet)
+{
+	map<int, string> *hashClassificationMap = new map<int, string>();
+	for(int j=0; j<videoMetaDataSet.size(); j++)
+	{
+		int hash = videoMetaDataSet[j]->getClassification()->getHash();
+		(*hashClassificationMap)[hash] = videoMetaDataSet[j]->getClassification()->getName();
+	}
+
+	return hashClassificationMap;
+}
+
+void PrintFileClassList(vector<string> &fileClassList)
+{
+	string resultTextFileStr = ExecutionPath() + "result.txt";
+	ofstream out(resultTextFileStr);
+	for(int k=0;k<fileClassList.size(); k++)
+		out << fileClassList[k];
+	out.close();
+}
+
 int main(int argc, char *argv[])
 {
-	string mode = "FULL";
+	string mode = "LEARNCLASSIFY";
 	ArgumentString(argc, argv, 1, mode);
 
 	Mat *vocabulary = NULL;
 	FeatureDictionary *dictionary = NULL;
 	//CvRTrees *classifier = NULL;
 	CvStatModel *classifier = NULL;
+	map<int, string> *hashClassificationMap = NULL;
 
 	string videoTestFileDir = "";
 	vector<string> videoTestFileNames;
@@ -415,12 +457,13 @@ int main(int argc, char *argv[])
 			fs2 << "{";
 			fs2 << "histogram" << *(videMetaData->getHistogram());
 			fs2 << "classification" << videMetaData->getClassification()->getName();
+			fs2 << "videoFileName" << videMetaData->getVideoFileName();
 			fs2 << "}";
 		}
 		fs2 << "]";
 		fs2.release();
 		
-		map<int, string> *hashClassificationMap = new map<int, string>();
+		hashClassificationMap = new map<int, string>();
 		classifier = TrainClassifier(*videoMetaDataSet, *hashClassificationMap);
 
 		//string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
@@ -520,18 +563,20 @@ int main(int argc, char *argv[])
 			(*it)["histogram"] >> histogram;
 			string classificationStr = "";
 			(*it)["classification"] >> classificationStr;
+			string videoFileNameStr = "";
+			(*it)["videoFileName"] >> videoFileNameStr;
 
 			// create videoMetaData
 			Mat *histogramPtr = new Mat(histogram.size(), histogram.type());
 			histogram.copyTo(*histogramPtr);
-			VideoMetaData *videoMetaData = new VideoMetaData(histogramPtr, classificationStr);
+			VideoMetaData *videoMetaData = new VideoMetaData(histogramPtr, classificationStr, videoFileNameStr);
 
 			videoMetaDataSet->push_back(videoMetaData);
 		}
 		fs3.release();
 		
 		// create classifier
-		map<int, string> *hashClassificationMap = new map<int, string>();
+		hashClassificationMap = new map<int, string>();
 		classifier = TrainClassifier(*videoMetaDataSet, *hashClassificationMap);
 
 		// load test file dir
@@ -562,10 +607,14 @@ int main(int argc, char *argv[])
 			videoTestContainers->push_back(videoContainer);
 		}
 
-		ConfusionMatrix *confusionMatrix = ClassifyVideos(*videoTestContainers, *dictionary, classifier);
+		// , map<int, string> &hashClassificationMap, vector<string> &fileClassList
+		vector<string> *fileClassList = new vector<string>();
+		ConfusionMatrix *confusionMatrix = ClassifyVideos(*videoTestContainers, *dictionary, classifier, hashClassificationMap, *fileClassList);
 
 		// print out Precision and Sensitifity for all classes
 		PrintConfusionMatrix(*confusionMatrix);
+
+		PrintFileClassList(*fileClassList);
 	}
 	
 	// ======================================================================================================

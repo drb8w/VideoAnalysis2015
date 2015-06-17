@@ -3,11 +3,12 @@
 #include "VideoMetaData.h"
 #include "StringHelpers.h"
 
-VideoMetaData::VideoMetaData(cv::Mat *histogram, std::string classificationName)
+VideoMetaData::VideoMetaData(cv::Mat *histogram, std::string classificationName, std::string videoFileName)
 {
 	this->m_histogram = histogram;
 	//this->m_classification = classification;
 	this->m_classification = new Classification(classificationName);
+	this->m_videoFileName = videoFileName;
 }
 
 cv::Mat *VideoMetaData::getHistogram()
@@ -19,6 +20,13 @@ Classification *VideoMetaData::getClassification()
 {
 	return this->m_classification;
 }
+
+std::string VideoMetaData::getVideoFileName()
+{
+	return this->m_videoFileName;
+}
+
+
 
 //std::string VideoMetaData::getClassification()
 //{

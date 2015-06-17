@@ -13,12 +13,16 @@ private:
 	//std::string m_classification;
 	Classification *m_classification;
 
+	std::string m_videoFileName;
+
 public:
-	VideoMetaData(cv::Mat *histogram, std::string classificationName);
+	VideoMetaData(cv::Mat *histogram, std::string classificationName, std::string videoFileName);
 
 	cv::Mat *getHistogram();
 	//std::string getClassification();
 	Classification *getClassification();
+
+	std::string getVideoFileName();
 	
 	//int ClassHash();	
 };
