@@ -189,6 +189,10 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 		Mat *histogram = new Mat(1, historamBins, CV_32F);
 
 		VideoContainer *videoContainer = videoContainers[i];
+
+		// TEST
+		cout << "video " + videoContainer->getVideoFileName() + " \n";
+
 		int nfeatures = 3*NFEATURES; 	// denser sampling of videos
 #ifdef USEFRAMEPTRS
 		vector<Mat *> *features = ExtractFeaturePtrs(*(videoContainer->getSpatialTemporalFramePtrs()),nfeatures);
@@ -239,6 +243,7 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 
 CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, string> &hashClassificationMap)
 {
+	cout << "Start: TrainClassifier";
 	CvRTParams params;
 	CvRTrees *rtree = new CvRTrees();
 
@@ -271,11 +276,14 @@ CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, st
 	rtree->train(trainingData, CV_ROW_SAMPLE, trainingClassification,
 				cv::Mat(), cv::Mat(), cv::Mat(), cv::Mat(), params);
 
+	cout << "End: TrainClassifier";
 	return rtree;
 }
 
 ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, CvRTrees &rTreeClassifier)
 {
+	cout << "Start: ClassifyVideos";
+
 	// generate ConfusionMatrix that shows how often a classification of the videoContainers is hit by the learning algorithm
 
 	vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(videoContainers, dictionary);
@@ -291,7 +299,7 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 
 		confusionMatrix->add(hash, classification);
 	}
-
+	cout << "End: ClassifyVideos";
 	return confusionMatrix;
 }
 
