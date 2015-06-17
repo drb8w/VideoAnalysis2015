@@ -378,18 +378,6 @@ int main(int argc, char *argv[])
 
 		dictionary = new FeatureDictionary(vocabulary);
 
-		//// HACK - rebuild video containers if problem with release
-		//videoContainers->clear();
-		//for(int i=0; i<videoFileNames.size(); i++)
-		//{
-		//	vector<string> tokens = splitString(videoFileNames[i], "/");
-		//	string classification = tokens[tokens.size()-1];
-
-		//	VideoContainer *videoContainer = new VideoContainer(videoFileNames[i], classification);
-		//	videoContainers->push_back(videoContainer);
-		//}
-		//// END-HACK - rebuild video containers if problem with release
-		
 		// build feature representation of every video in the trainingset
 		vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(*videoContainers, *dictionary);
 
@@ -398,14 +386,14 @@ int main(int argc, char *argv[])
 		string videoMetaDataSetFileName = videoMetaDataSetDir + "VideoMetaDataSet.yml";
 
 		FileStorage fs2(videoMetaDataSetFileName, FileStorage::WRITE);
-		fs2 << "videMetaDataSet" << "[" ;
+		fs2 << "videoMetaDataSet" << "[" ;
 		for(int k=0; k<videoMetaDataSet->size(); k++)
 		{
 			VideoMetaData *videMetaData = (*videoMetaDataSet)[k];
-			fs2 << "videMetaData" << "[" ;
+			fs2 << "{";
 			fs2 << "histogram" << *(videMetaData->getHistogram());
 			fs2 << "classification" << videMetaData->getClassification()->getName();
-			fs2 << "]";			
+			fs2 << "}";
 		}
 		fs2 << "]";
 		fs2.release();
@@ -468,7 +456,79 @@ int main(int argc, char *argv[])
 	
 	// ======================================================================================================
 
-	if (strcmp(mode.c_str(),"FULL") == 0 ||strcmp(mode.c_str(),"CLASSIFY") == 0)
+	if (strcmp(mode.c_str(),"LEARNCLASSIFY") == 0)
+	{
+		// load vocabulary
+		//string vocabularyDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
+		string vocabularyDir = "./";
+		ArgumentPath(argc, argv, 2, vocabularyDir);
+		string vocabularyFileName = vocabularyDir + "Vocalulary.yml";
+
+		Mat voc;
+		FileStorage fs2(vocabularyFileName, FileStorage::READ);
+		fs2["vocabulary"] >> voc;
+		fs2.release();
+
+		if (voc.empty())
+		{
+			cout << "No vocabulary found.";
+			return -1;
+		}
+
+		vocabulary = new Mat(voc.size(), voc.type());
+		voc.copyTo(*vocabulary);
+		dictionary = new FeatureDictionary(vocabulary);
+
+		// load VideoMetaDataSet
+		string videoMetaDataSetDir = "./";
+		ArgumentPath(argc, argv, 3, videoMetaDataSetDir);
+		string videoMetaDataSetFileName = videoMetaDataSetDir + "VideoMetaDataSet.yml";
+
+		FileStorage fs3(videoMetaDataSetFileName, FileStorage::READ);
+		FileNode videoMetaDataSetNode = fs3["videoMetaDataSet"];
+		FileNodeIterator it = videoMetaDataSetNode.begin(), it_end = videoMetaDataSetNode.end();
+		int idx = 0;
+
+		vector<VideoMetaData *> *videoMetaDataSet = new vector<VideoMetaData *>();
+
+		// iterate through a sequence using FileNodeIterator
+		for( ; it != it_end; ++it, idx++ )
+		{
+			Mat histogram;
+			(*it)["histogram"] >> histogram;
+			string classificationStr = "";
+			(*it)["classification"] >> classificationStr;
+
+			// create videoMetaData
+			Mat *histogramPtr = new Mat(histogram.size(), histogram.type());
+			histogram.copyTo(*histogramPtr);
+			VideoMetaData *videoMetaData = new VideoMetaData(histogramPtr, classificationStr);
+
+			videoMetaDataSet->push_back(videoMetaData);
+		}
+		fs3.release();
+		
+		// create classifier
+		map<int, string> *hashClassificationMap = new map<int, string>();
+		classifier = TrainClassifier(*videoMetaDataSet, *hashClassificationMap);
+
+		// load test file dir
+		//videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
+		videoTestFileDir = "./test/";
+		ArgumentPath(argc, argv, 4, videoTestFileDir);
+		videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir, true, ".avi");
+
+		if (videoTestFileNames.size() == 0)
+		{
+			cout << "No test video files found.";
+			return -1;
+		}
+	}
+	
+	// ======================================================================================================
+
+
+	if (strcmp(mode.c_str(),"FULL") == 0 ||strcmp(mode.c_str(),"CLASSIFY") == 0 || strcmp(mode.c_str(),"LEARNCLASSIFY") == 0)
 	{
 		vector<VideoContainer *> *videoTestContainers = new vector<VideoContainer *>();
 		for(int i=0; i<videoTestFileNames.size(); i++)
