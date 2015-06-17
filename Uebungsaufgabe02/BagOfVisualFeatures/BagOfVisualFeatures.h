@@ -30,6 +30,10 @@ cv::Mat *BuildVocabulary(std::vector<VideoContainer *> &videoContainers);
 
 std::vector<VideoMetaData *> *BuildVideoMetaData(std::vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary);
 
+std::map<int, std::string> * GetHashClassificationMap(std::vector<VideoMetaData *> &videoMetaDataSet);
+
+void PrintFileClassList(std::vector<std::string> &fileClassList);
+
 //cv::CvStatModel *TrainClassifier(std::vector<VideoMetaData *> &videoMetaDataSet, std::map<int, std::string> &hashClassificationMap);
 
 //ConfusionMatrix *ClassifyVideos(std::vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, cv::CvStatModel *classifier);

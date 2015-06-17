@@ -15,4 +15,6 @@ std::string ArgumentPath(int argc, char *argv[], int argNo, std::string &path);
 
 int str_hash(const std::string &key, int tableSize = INT_MAX);
 
+std::string ExecutionPath();
+
 #endif

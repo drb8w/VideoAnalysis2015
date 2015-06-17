@@ -147,6 +147,7 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BagOfVisualFeatures.h" />
     <ClInclude Include="Classification.h" />
     <ClInclude Include="ConfusionMatrix.h" />
     <ClInclude Include="FeatureDictionary.h" />
