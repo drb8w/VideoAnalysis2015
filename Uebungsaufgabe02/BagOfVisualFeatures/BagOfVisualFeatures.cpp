@@ -178,6 +178,7 @@ Mat *BuildVocabulary(vector<VideoContainer *> &videoContainers)
 
 vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary)//, vector<Mat> &histograms, vector<string> &classifications)
 {
+	cout << "Start: BuildVideoMetaData";
 	// output featurepoints and labels for videos
 	vector<VideoMetaData *> *videoMetaDataSet = new vector<VideoMetaData *>();
 
@@ -232,6 +233,7 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 		videoMetaDataSet->push_back(videoMetaData);
 	}
 
+	cout << "End: BuildVideoMetaData";
 	return videoMetaDataSet;
 }
 
@@ -364,16 +366,45 @@ int main(int argc, char *argv[])
 		fs.release();
 
 		dictionary = new FeatureDictionary(vocabulary);
-	
+
+		//// HACK - rebuild video containers if problem with release
+		//videoContainers->clear();
+		//for(int i=0; i<videoFileNames.size(); i++)
+		//{
+		//	vector<string> tokens = splitString(videoFileNames[i], "/");
+		//	string classification = tokens[tokens.size()-1];
+
+		//	VideoContainer *videoContainer = new VideoContainer(videoFileNames[i], classification);
+		//	videoContainers->push_back(videoContainer);
+		//}
+		//// END-HACK - rebuild video containers if problem with release
+		
 		// build feature representation of every video in the trainingset
 		vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(*videoContainers, *dictionary);
 
+		string videoMetaDataSetDir = "./";
+		ArgumentPath(argc, argv, 5, videoMetaDataSetDir);
+		string videoMetaDataSetFileName = "VideoMetaDataSet.yml";
+
+		FileStorage fs2(videoMetaDataSetFileName, FileStorage::WRITE);
+		fs2 << "videMetaDataSet" << "[" ;
+		for(int k=0; k<videoMetaDataSet->size(); k++)
+		{
+			VideoMetaData *videMetaData = (*videoMetaDataSet)[k];
+			fs2 << "videMetaData" << "[" ;
+			fs2 << "histogram" << *(videMetaData->getHistogram());
+			fs2 << "classification" << videMetaData->getClassification()->getName();
+			fs2 << "]";			
+		}
+		fs2 << "]";
+		fs2.release();
+		
 		map<int, string> *hashClassificationMap = new map<int, string>();
 		classifier = TrainClassifier(*videoMetaDataSet, *hashClassificationMap);
 
 		//string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
 		string classifierDir = "./";
-		ArgumentPath(argc, argv, 5, classifierDir);
+		ArgumentPath(argc, argv, 6, classifierDir);
 		string classifierFileName = classifierDir + "CvRTrees";
 		classifier->save(classifierFileName.c_str());
 	}
