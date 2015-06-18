@@ -61,3 +61,18 @@ std::vector<Classification *> *GetUniqueVideoMetaDataClassifications(std::vector
 		
 	return new std::vector<Classification *>(classes->begin(), classes->end());
 }
+
+std::vector<Classification *> *GetVideoMetaDataClassifications(std::map<int, std::string> &hashClassificationMap)
+{
+	std::vector<Classification *> *classifications = new std::vector<Classification *>();
+	for(it_type iterator = hashClassificationMap.begin(); iterator != hashClassificationMap.end(); iterator++) 
+	{
+		//int key = iterator->first;
+		std::string value = iterator->second;
+		Classification *classification = new Classification(value);
+		
+		classifications->push_back(classification);
+	}
+
+	return classifications;
+}

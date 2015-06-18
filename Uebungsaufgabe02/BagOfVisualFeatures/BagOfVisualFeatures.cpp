@@ -37,8 +37,6 @@
 using namespace cv;
 using namespace std;
 
-typedef std::map<int, std::string>::iterator it_type;
-
 void PrintMemoryInfo( DWORD processID )
 {
     HANDLE hProcess;
@@ -282,13 +280,11 @@ CvStatModel *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int,
 	// ===================================================
 
 	// Copy Data
-	//Mat trainingClassification(videoMetaDataSet.size(),1, CV_32FC1);
 	Mat trainingClassification(videoMetaDataSet.size(),1, CV_32SC1);
 	for(int j=0; j<videoMetaDataSet.size(); j++)
 	{
 		int hash = videoMetaDataSet[j]->getClassification()->getHash();
 		hashClassificationMap[hash] = videoMetaDataSet[j]->getClassification()->getName();
-		//trainingClassification.at<float>(j,0) = hash;
 		trainingClassification.at<int>(j,0) = hash;
 	}
 #ifdef TREE
@@ -314,11 +310,7 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 	// generate ConfusionMatrix that shows how often a classification of the videoContainers is hit by the learning algorithm
 	vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(videoContainers, dictionary);
 
-	//if (hashClassificationMap == NULL)
-	//	hashClassificationMap = GetHashClassificationMap(*videoMetaDataSet);
-
-	//Mat ConfusionMatrix(,,CV_32FC1);
-	ConfusionMatrix *confusionMatrix = new ConfusionMatrix(*GetUniqueVideoMetaDataClassifications(*videoMetaDataSet));
+	ConfusionMatrix *confusionMatrix = new ConfusionMatrix(*GetVideoMetaDataClassifications(hashClassificationMap));
 
 	for(int i=0; i<videoMetaDataSet->size(); i++)
 	{

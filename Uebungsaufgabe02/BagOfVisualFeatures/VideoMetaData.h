@@ -6,6 +6,8 @@
 #include <opencv2\opencv.hpp>
 #include "Classification.h"
 
+typedef std::map<int, std::string>::iterator it_type;
+
 class VideoMetaData
 {
 private:
@@ -28,5 +30,7 @@ public:
 };
 
 std::vector<Classification *> *GetUniqueVideoMetaDataClassifications(std::vector<VideoMetaData *> &videoMetaDataSet);
+
+std::vector<Classification *> *GetVideoMetaDataClassifications(std::map<int, std::string> &hashClassificationMap);
 
 #endif
