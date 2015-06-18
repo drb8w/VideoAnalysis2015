@@ -1,5 +1,6 @@
 //#define USEFRAMEPTRS
 #define SVM
+//#define KNN
 
 #include "stdafx.h"
 
@@ -260,6 +261,10 @@ CvStatModel *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int,
 	CvSVMParams params;
 	CvSVM *classifier = new CvSVM();
 #endif
+#ifdef KNN
+	int K = 5;
+	CvKNearest *classifier = new CvKNearest();
+#endif
 
 	// assemble trainingData out of histogram-entries of videoMetaDataSet
 	
@@ -294,6 +299,9 @@ CvStatModel *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int,
 #ifdef SVM
 	classifier->train(trainingData, trainingClassification, Mat(), Mat(), params );
 #endif
+#ifdef KNN
+	classifier->train(trainingData, trainingClassification, Mat(), false, K );
+#endif
 	cout << "End: TrainClassifier \n";
 	return classifier;
 }
@@ -307,6 +315,10 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 #ifdef SVM
 	CvSVM *classifierPtr = (CvSVM *)(classifier);
 #endif
+#ifdef KNN
+	int K = 5;
+	CvKNearest *classifierPtr = (CvKNearest *)(classifier);
+#endif
 	// generate ConfusionMatrix that shows how often a classification of the videoContainers is hit by the learning algorithm
 	vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(videoContainers, dictionary);
 
@@ -315,9 +327,12 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 	for(int i=0; i<videoMetaDataSet->size(); i++)
 	{
 		Mat *histogram = (*videoMetaDataSet)[i]->getHistogram();
+#ifdef KNN
+		int classification = (int)classifierPtr->find_nearest(*histogram, K );
+#else
 		//int classification = (int)classifier.predict(*histogram);
 		int classification = (int)classifierPtr->predict(*histogram);
-		
+#endif	
 		try{
 			// try to find in map
 			string classificationStr = hashClassificationMap[classification];

@@ -3,6 +3,7 @@
 
 //#define USEFRAMEPTRS
 #define SVM
+//#define KNN
 
 #include "stdafx.h"
 #include <vector>
