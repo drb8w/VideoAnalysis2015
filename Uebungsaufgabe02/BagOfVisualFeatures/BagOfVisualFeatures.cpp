@@ -37,6 +37,7 @@
 using namespace cv;
 using namespace std;
 
+typedef std::map<int, std::string>::iterator it_type;
 
 void PrintMemoryInfo( DWORD processID )
 {
@@ -301,7 +302,7 @@ CvStatModel *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int,
 	return classifier;
 }
 
-ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, CvStatModel *classifier, map<int, string> *hashClassificationMap, vector<string> &fileClassList)
+ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, CvStatModel *classifier, map<int, string> &hashClassificationMap, vector<string> &fileClassList)
 {
 	cout << "Start: ClassifyVideos \n";
 #ifdef TREE
@@ -313,8 +314,8 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 	// generate ConfusionMatrix that shows how often a classification of the videoContainers is hit by the learning algorithm
 	vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(videoContainers, dictionary);
 
-	if (hashClassificationMap == NULL)
-		hashClassificationMap = GetHashClassificationMap(*videoMetaDataSet);
+	//if (hashClassificationMap == NULL)
+	//	hashClassificationMap = GetHashClassificationMap(*videoMetaDataSet);
 
 	//Mat ConfusionMatrix(,,CV_32FC1);
 	ConfusionMatrix *confusionMatrix = new ConfusionMatrix(*GetUniqueVideoMetaDataClassifications(*videoMetaDataSet));
@@ -327,7 +328,7 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 		
 		try{
 			// try to find in map
-			string classificationStr = (*hashClassificationMap)[classification];
+			string classificationStr = hashClassificationMap[classification];
 
 			if (strcmp(classificationStr.c_str(),"") == 0 )
 				classificationStr = "NO CLASS";
@@ -466,9 +467,26 @@ int main(int argc, char *argv[])
 		hashClassificationMap = new map<int, string>();
 		classifier = TrainClassifier(*videoMetaDataSet, *hashClassificationMap);
 
+		string hashClassificationMapDir = "./";
+		ArgumentPath(argc, argv, 6, hashClassificationMapDir);
+		string hashClassificationMapFileName = hashClassificationMapDir + "HashClassificationMap.yml";
+
+		FileStorage fs3(hashClassificationMapFileName, FileStorage::WRITE);
+		fs3 << "hashClassificationMap" << "[" ;
+		for(it_type iterator = hashClassificationMap->begin(); iterator != hashClassificationMap->end(); iterator++) {
+			// iterator->first = key
+			// iterator->second = value
+			fs3 << "{";
+			fs3 << "key" << iterator->first;
+			fs3 << "value" << iterator->second;
+			fs3 << "}";
+		}
+		fs3 << "]";
+		fs3.release();
+
 		//string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
 		string classifierDir = "./";
-		ArgumentPath(argc, argv, 6, classifierDir);
+		ArgumentPath(argc, argv, 7, classifierDir);
 		string classifierFileName = classifierDir + "Classifier";
 		classifier->save(classifierFileName.c_str());
 	}
@@ -497,10 +515,32 @@ int main(int argc, char *argv[])
 		voc.copyTo(*vocabulary);
 		dictionary = new FeatureDictionary(vocabulary);
 
+		string hashClassificationMapDir = "./";
+		ArgumentPath(argc, argv, 3, hashClassificationMapDir);
+		string hashClassificationMapFileName = hashClassificationMapDir + "HashClassificationMap.yml";
+
+		FileStorage fs3(hashClassificationMapFileName, FileStorage::READ);
+		FileNode hashClassificationMapNode = fs3["hashClassificationMap"];
+		FileNodeIterator it = hashClassificationMapNode.begin(), it_end = hashClassificationMapNode.end();
+		int idx = 0;
+		
+		hashClassificationMap = new map<int, string>();
+
+		// iterate through a sequence using FileNodeIterator
+		for( ; it != it_end; ++it, idx++ )
+		{
+			int hash;
+			(*it)["key"] >> hash;
+			string classificationStr = "";
+			(*it)["value"] >> classificationStr;
+			(*hashClassificationMap)[hash] = classificationStr;
+		}		
+		fs3.release();
+
 		// load classifier
 		//string classifierDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/";
 		string classifierDir = "./";
-		ArgumentPath(argc, argv, 3, classifierDir);
+		ArgumentPath(argc, argv, 4, classifierDir);
 		string classifierFileName = classifierDir + "Classifier";
 		classifier = new CvRTrees();
 		classifier->load(classifierFileName.c_str());
@@ -509,7 +549,7 @@ int main(int argc, char *argv[])
 		// load test file dir
 		//videoTestFileDir = "C:/Users/braendlc/Documents/TU_Wien/2_Semester/VideoAnalysis/UE/UE02/test/";
 		videoTestFileDir = "./test/";
-		ArgumentPath(argc, argv, 4, videoTestFileDir);
+		ArgumentPath(argc, argv, 5, videoTestFileDir);
 		videoTestFileNames = getFilesPathWithinFolder(videoTestFileDir, true, ".avi");
 
 		if (videoTestFileNames.size() == 0)
@@ -609,7 +649,7 @@ int main(int argc, char *argv[])
 
 		// , map<int, string> &hashClassificationMap, vector<string> &fileClassList
 		vector<string> *fileClassList = new vector<string>();
-		ConfusionMatrix *confusionMatrix = ClassifyVideos(*videoTestContainers, *dictionary, classifier, hashClassificationMap, *fileClassList);
+		ConfusionMatrix *confusionMatrix = ClassifyVideos(*videoTestContainers, *dictionary, classifier, *hashClassificationMap, *fileClassList);
 
 		// print out Precision and Sensitifity for all classes
 		PrintConfusionMatrix(*confusionMatrix);
