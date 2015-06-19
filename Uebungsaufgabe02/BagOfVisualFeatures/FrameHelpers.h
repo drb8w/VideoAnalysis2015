@@ -18,4 +18,6 @@ std::vector<cv::Mat *> *convertToGrayscalePtrs(std::vector<cv::Mat *> &rgbFrames
 
 void cleanMatF32(cv::Mat &mat);
 
+void cleanMatS32(cv::Mat &mat);
+
 #endif

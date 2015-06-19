@@ -1,6 +1,8 @@
 //#define USEFRAMEPTRS
 #define SVM
 //#define KNN
+//#define TREE
+//#define MYKNN
 
 #include "stdafx.h"
 
@@ -34,6 +36,7 @@
 #include "FeatureDictionary.h"
 #include "VideoMetaData.h"
 #include "ConfusionMatrix.h"
+#include "KNNClassifier.h"
 
 using namespace cv;
 using namespace std;
@@ -248,8 +251,11 @@ vector<VideoMetaData *> *BuildVideoMetaData(vector<VideoContainer *> &videoConta
 	return videoMetaDataSet;
 }
 
-//CvRTrees *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, string> &hashClassificationMap)
+#ifdef MYKNN
+KNNClassifier *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, string> &hashClassificationMap)
+#else
 CvStatModel *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int, string> &hashClassificationMap)
+#endif
 {
 	cout << "Start: TrainClassifier \n";
 	
@@ -265,6 +271,10 @@ CvStatModel *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int,
 	int K = 5;
 	CvKNearest *classifier = new CvKNearest();
 #endif
+#ifdef MYKNN
+	int K = 5;
+	KNNClassifier *classifier = new KNNClassifier();
+#endif
 
 	// assemble trainingData out of histogram-entries of videoMetaDataSet
 	
@@ -276,37 +286,87 @@ CvStatModel *TrainClassifier(vector<VideoMetaData *> &videoMetaDataSet, map<int,
 	int Rows = rows * videoMetaDataSet.size();
 	int Cols = cols;
 	int type = CV_32FC1;
-	//Mat trainingData(videoMetaDataSet.size(),videoMetaDataSet[0]->getHistogram()->cols, CV_32FC1);
 	Mat trainingData(Rows,Cols, CV_32FC1);
+	// TEST
+	cleanMatF32(trainingData);
 	
 	// move every row of Mats in combined Mat
 	for(int i=0; i<videoMetaDataSet.size(); i++)
 		videoMetaDataSet[i]->getHistogram()->copyTo( trainingData( Rect(0, i*rows, cols, rows) ) );
+
+	//// TEST
+	//string trainingDataFileName = ExecutionPath() + "TrainingData.yml";
+	//FileStorage fs(trainingDataFileName, FileStorage::WRITE);
+	//fs << "trainingData" << trainingData;
+	//fs.release();
 	// ===================================================
 
 	// Copy Data
 	Mat trainingClassification(videoMetaDataSet.size(),1, CV_32SC1);
+	// TEST
+	cleanMatS32(trainingClassification);
+	
 	for(int j=0; j<videoMetaDataSet.size(); j++)
 	{
 		int hash = videoMetaDataSet[j]->getClassification()->getHash();
 		hashClassificationMap[hash] = videoMetaDataSet[j]->getClassification()->getName();
 		trainingClassification.at<int>(j,0) = hash;
 	}
+
+	//// TEST
+	//string trainingClassificationFileName = ExecutionPath() + "TrainingClassification.yml";
+	//FileStorage fs2(trainingClassificationFileName, FileStorage::WRITE);
+	//fs2 << "trainingClassification" << trainingClassification;
+	//fs2.release();
+
 #ifdef TREE
 	classifier->train(trainingData, CV_ROW_SAMPLE, trainingClassification,
 				cv::Mat(), cv::Mat(), cv::Mat(), cv::Mat(), params);
 #endif
 #ifdef SVM
-	classifier->train(trainingData, trainingClassification, Mat(), Mat(), params );
+	bool succ = classifier->train(trainingData, trainingClassification, Mat(), Mat(), params );
+
+	//// TEST if learned trainingData is classified correctly
+	//int classification = (int)classifier->predict(*(videoMetaDataSet[0]->getHistogram()));
+	//int hash = videoMetaDataSet[0]->getClassification()->getHash();
+	//CvSVM myClassifier(trainingData, trainingClassification, Mat(), Mat(), params );
+	//int myClassification = (int)myClassifier.predict(*(videoMetaDataSet[0]->getHistogram()));
+
+	//// TEST - try idiotic classification
+	//Mat myTrainingData(10,1, CV_32FC1);
+	//Mat myTrainingClassification(10,1, CV_32SC1);
+	//for(int k=0; k<10; k++)
+	//{
+	//	myTrainingData.at<float>(k,0) = k;
+	//	if (k < 5)
+	//		myTrainingClassification.at<float>(k,0)=0;
+	//	else
+	//		myTrainingClassification.at<float>(k,0)=1;		
+	//}
+	//CvSVM myClassifier(myTrainingData, myTrainingClassification, Mat(), Mat(), params );
+	//Mat testMat(1,1,CV_32FC1);
+	//testMat.at<float>(0,0)=3;
+	//float myClassification = myClassifier.predict(testMat);
+	//testMat.at<float>(0,0)=7;
+	//float myClassification2 = myClassifier.predict(testMat);	
+
 #endif
 #ifdef KNN
 	classifier->train(trainingData, trainingClassification, Mat(), false, K );
 #endif
+#ifdef MYKNN
+	classifier->train(trainingData, trainingClassification, K );
+#endif
+
 	cout << "End: TrainClassifier \n";
 	return classifier;
 }
 
+#ifdef MYKNN
+ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, KNNClassifier *classifier, map<int, string> &hashClassificationMap, vector<string> &fileClassList)
+#else
 ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, FeatureDictionary &dictionary, CvStatModel *classifier, map<int, string> &hashClassificationMap, vector<string> &fileClassList)
+#endif
 {
 	cout << "Start: ClassifyVideos \n";
 #ifdef TREE
@@ -319,6 +379,10 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 	int K = 5;
 	CvKNearest *classifierPtr = (CvKNearest *)(classifier);
 #endif
+#ifdef MYKNN
+	int K = 5;
+	KNNClassifier *classifierPtr = classifier;
+#endif
 	// generate ConfusionMatrix that shows how often a classification of the videoContainers is hit by the learning algorithm
 	vector<VideoMetaData *> *videoMetaDataSet = BuildVideoMetaData(videoContainers, dictionary);
 
@@ -327,12 +391,12 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 	for(int i=0; i<videoMetaDataSet->size(); i++)
 	{
 		Mat *histogram = (*videoMetaDataSet)[i]->getHistogram();
-#ifdef KNN
+#if defined(KNN) || defined(MYKNN)
 		int classification = (int)classifierPtr->find_nearest(*histogram, K );
 #else
-		//int classification = (int)classifier.predict(*histogram);
 		int classification = (int)classifierPtr->predict(*histogram);
-#endif	
+#endif
+
 		try{
 			// try to find in map
 			string classificationStr = hashClassificationMap[classification];
@@ -383,8 +447,11 @@ int main(int argc, char *argv[])
 
 	Mat *vocabulary = NULL;
 	FeatureDictionary *dictionary = NULL;
-	//CvRTrees *classifier = NULL;
+#ifdef MYKNN
+	KNNClassifier *classifier = NULL;
+#else
 	CvStatModel *classifier = NULL;
+#endif
 	map<int, string> *hashClassificationMap = NULL;
 
 	string videoTestFileDir = "";
@@ -549,7 +616,18 @@ int main(int argc, char *argv[])
 		string classifierDir = "./";
 		ArgumentPath(argc, argv, 4, classifierDir);
 		string classifierFileName = classifierDir + "Classifier";
+#ifdef TREE
 		classifier = new CvRTrees();
+#endif
+#ifdef SVM
+		classifier = new CvSVM();
+#endif
+#ifdef KNN
+		classifier = new CvKNearest();
+#endif
+#ifdef MYKNN
+		classifier = new KNNClassifier();
+#endif
 		classifier->load(classifierFileName.c_str());
 		// TODO: verification missing
 

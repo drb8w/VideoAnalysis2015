@@ -13,7 +13,7 @@ std::string ArgumentString(int argc, char *argv[], int argNo, std::string &str);
 
 std::string ArgumentPath(int argc, char *argv[], int argNo, std::string &path);
 
-int str_hash(const std::string &key, int tableSize = INT_MAX);
+int str_hash(const std::string &key, int tableSize = USHRT_MAX);
 
 std::string ExecutionPath();
 

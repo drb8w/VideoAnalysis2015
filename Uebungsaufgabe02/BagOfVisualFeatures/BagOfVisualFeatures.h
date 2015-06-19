@@ -4,6 +4,9 @@
 //#define USEFRAMEPTRS
 #define SVM
 //#define KNN
+//#define TREE
+//#define MYKNN
+
 
 #include "stdafx.h"
 #include <vector>

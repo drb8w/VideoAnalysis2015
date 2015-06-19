@@ -154,6 +154,8 @@
     <ClInclude Include="FeatureHelpers.h" />
     <ClInclude Include="FileHelpers.h" />
     <ClInclude Include="FrameHelpers.h" />
+    <ClInclude Include="KNNClassifier.h" />
+    <ClInclude Include="NumberHelpers.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StringHelpers.h" />
     <ClInclude Include="targetver.h" />
@@ -169,6 +171,8 @@
     <ClCompile Include="FeatureHelpers.cpp" />
     <ClCompile Include="FileHelpers.cpp" />
     <ClCompile Include="FrameHelpers.cpp" />
+    <ClCompile Include="KNNClassifier.cpp" />
+    <ClCompile Include="NumberHelpers.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

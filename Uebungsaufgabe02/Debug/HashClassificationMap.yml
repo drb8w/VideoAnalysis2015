@@ -1,0 +1,14 @@
+%YAML:1.0
+hashClassificationMap:
+   -
+      key: 5737
+      value: "4_Hug"
+   -
+      key: 46760
+      value: "2_HandShake"
+   -
+      key: 49219
+      value: "3_HighFive"
+   -
+      key: 62437
+      value: "1_Kiss"

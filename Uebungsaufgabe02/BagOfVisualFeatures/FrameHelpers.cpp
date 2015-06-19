@@ -80,3 +80,10 @@ void cleanMatF32(Mat &mat)
 		for(int j=0; j<mat.cols; j++)
 			mat.at<float>(i,j) = 0;	
 }
+
+void cleanMatS32(Mat &mat)
+{
+	for(int i=0; i<mat.rows; i++)
+		for(int j=0; j<mat.cols; j++)
+			mat.at<int>(i,j) = 0;	
+}
