@@ -17,4 +17,8 @@ int str_hash(const std::string &key, int tableSize = USHRT_MAX);
 
 std::string ExecutionPath();
 
+std::string RelativeFileName(std::string fileName, bool withExtension = false);
+
+std::string CleanString(std::string str, bool numbers = true, bool specialCharacters = true);
+
 #endif

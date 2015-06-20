@@ -404,7 +404,10 @@ ConfusionMatrix *ClassifyVideos(vector<VideoContainer *> &videoContainers, Featu
 			if (strcmp(classificationStr.c_str(),"") == 0 )
 				classificationStr = "NO CLASS";
 		
-			string outputStr = (*videoMetaDataSet)[i]->getVideoFileName()+"\t"+classificationStr+"\n";
+			// compact fileName to relative path without extension
+			string relativeFileName = RelativeFileName((*videoMetaDataSet)[i]->getVideoFileName());
+			string cleanClassificationStr = CleanString(classificationStr);
+			string outputStr = relativeFileName+"\t"+cleanClassificationStr+"\n";
 			fileClassList.push_back(outputStr);
 
 			int hash = (*videoMetaDataSet)[i]->getClassification()->getHash();

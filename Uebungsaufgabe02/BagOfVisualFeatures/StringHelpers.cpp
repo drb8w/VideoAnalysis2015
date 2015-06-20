@@ -10,6 +10,8 @@
 #include <string>
 #include <sstream>
 
+#include <algorithm>
+
 using namespace std;
 
 vector<string> splitString(string s, string delimiter)
@@ -119,3 +121,54 @@ int str_hash( const string &key, int tableSize) {
 
    return hashVal;
  }
+
+// compact fileName to relative path without extension
+std::string RelativeFileName(std::string fileName, bool withExtension)
+{
+	// truncate ExecutionPath();
+	std::string execPath = ExecutionPath();
+
+	std::string relativeFileName = fileName;
+
+	std::string::size_type p = fileName.find(execPath);
+	if (p != std::string::npos) 
+	{
+		int pos = p + execPath.length() - 1;
+		int len = fileName.length() - pos;
+		relativeFileName = fileName.substr(pos,len);
+	}
+
+	if (!withExtension)
+	{
+		std::string::size_type p2 = relativeFileName.rfind('.');
+		if (p2 != std::string::npos) 
+		{
+			int pos2 = p2;
+			relativeFileName = relativeFileName.substr(0,pos2);
+		}
+	}
+
+	relativeFileName = '.' + relativeFileName;
+
+	return relativeFileName;
+}
+
+std::string CleanString(std::string str, bool numbers, bool specialCharacters)
+{
+	if (numbers)
+	{
+		char chars[] = "0123456789";
+		for (unsigned int i = 0; i < strlen(chars); ++i)
+			str.erase (std::remove(str.begin(), str.end(), chars[i]), str.end());
+	}
+
+	if (specialCharacters)
+	{
+		char chars[] = "_";
+		for (unsigned int i = 0; i < strlen(chars); ++i)
+			str.erase (std::remove(str.begin(), str.end(), chars[i]), str.end());
+	}
+
+	return str;
+}
+
