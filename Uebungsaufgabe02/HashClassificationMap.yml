@@ -1,14 +1,14 @@
 %YAML:1.0
 hashClassificationMap:
    -
-      key: 102371407
+      key: 5737
       value: "4_Hug"
    -
-      key: 1222962627
+      key: 46760
       value: "2_HandShake"
    -
-      key: 1432362629
-      value: "1_Kiss"
-   -
-      key: 1831850771
+      key: 49219
       value: "3_HighFive"
+   -
+      key: 62437
+      value: "1_Kiss"
