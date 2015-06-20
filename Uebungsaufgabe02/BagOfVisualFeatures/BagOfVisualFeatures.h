@@ -2,9 +2,9 @@
 #define BAGOFVISUALFEATURES
 
 //#define USEFRAMEPTRS
-#define SVM
+//#define SVM
 //#define KNN
-//#define TREE
+#define TREE
 //#define MYKNN
 
 
