@@ -1,8 +1,8 @@
 #include "FeatureHelpers.h"
 
 #include "stdafx.h"
-#define NFEATURES 125
-//#define NFEATURES 100
+//#define NFEATURES 125
+#define NFEATURES 100
 //#define NFEATURES 75
 //#define NFEATURES 50
 
