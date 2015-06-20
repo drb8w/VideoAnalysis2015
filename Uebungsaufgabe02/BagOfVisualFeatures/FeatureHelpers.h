@@ -1,10 +1,12 @@
 #ifndef FEATUREHELPERS
 #define FEATUREHELPERS
 
-#define NFEATURES 100
+#define NFEATURES 125
+//#define NFEATURES 100
 //#define NFEATURES 75
 //#define NFEATURES 50
 
+//#define NUMCLUSTERS 500 // 50*50 from CompVis or 480 from paper
 #define NUMCLUSTERS 480 // 50*50 from CompVis or 480 from paper
 //#define NUMCLUSTERS 360
 //#define NUMCLUSTERS 240
