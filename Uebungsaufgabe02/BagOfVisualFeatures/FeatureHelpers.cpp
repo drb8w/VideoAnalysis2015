@@ -1,11 +1,13 @@
 #include "FeatureHelpers.h"
 
 #include "stdafx.h"
-//#define NFEATURES 100
-#define NFEATURES 50
+#define NFEATURES 100
+//#define NFEATURES 75
+//#define NFEATURES 50
 
-//#define NUMCLUSTERS 480 // 50*50 from CompVis or 480 from paper
-#define NUMCLUSTERS 240
+#define NUMCLUSTERS 480 // 50*50 from CompVis or 480 from paper
+//#define NUMCLUSTERS 360
+//#define NUMCLUSTERS 240
 
 #include <stdio.h>
 #include <list>

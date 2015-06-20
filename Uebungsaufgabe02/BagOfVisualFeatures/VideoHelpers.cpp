@@ -10,7 +10,7 @@
 
 #include "FrameHelpers.h"
 
-#define FRAMEMODULO 4
+#define FRAMEMODULO 1
 
 using namespace cv;
 using namespace std;

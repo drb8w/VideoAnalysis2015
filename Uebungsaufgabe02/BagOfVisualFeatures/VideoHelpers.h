@@ -5,7 +5,7 @@
 #include <vector>
 #include <opencv2\opencv.hpp>
 
-#define FRAMEMODULO 4
+#define FRAMEMODULO 1
 
 std::vector<cv::Mat> *GetFramesCPP(std::string videoFileName, std::vector<cv::Mat> *videoFrames, int frameModulo = FRAMEMODULO);
 std::vector<cv::Mat> *GetFrames(std::string videoFileName, std::vector<cv::Mat> *videoFrames, int frameModulo = FRAMEMODULO);
