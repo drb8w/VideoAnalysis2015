@@ -147,7 +147,7 @@ void PrintConfusionMatrix(ConfusionMatrix &confusionMatrix)
 
 		std::ostringstream ss2;
 		ss2 << confusionMatrix.Sensitivity(*classification);
-		std::string sensStr(ss.str());
+		std::string sensStr(ss2.str());
 		sensStr = "Sinsitivity: " + sensStr  + "\n";
 
 		cout << sensStr;
