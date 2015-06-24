@@ -73,7 +73,7 @@ float KNNClassifier::find_nearest(cv::Mat &testData, int K)
 		// calculate distance
 		double sum = 0;
 		for(int d=0; d<trainingDataRow.cols; d++)
-			sum += abs(trainingDataRow.at<float>(0,d) - testData.at<float>(0,d));
+			sum += pow(trainingDataRow.at<float>(0,d) - testData.at<float>(0,d),2);
 		float distance = sqrt(sum);
 
 		// add both in vector to sort
